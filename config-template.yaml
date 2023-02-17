@@ -1,0 +1,50 @@
+base:
+  qredoAPI: https://play-api.qredo.network/api/v1/p
+  pin: 0
+autoApproval:
+  enabled: false
+  retryIntervalMaxSec: 300
+  retryIntervalSec: 5
+websocket:
+  qredoWebsocket: wss://play-api.qredo.network/api/v1/p/coreclient/feed
+  reconnectTimeoutSec: 300
+  reconnectIntervalSec: 5
+  pingPeriodSec: 5
+  pongWaitSec: 10
+  writeWaitSec: 10
+  readBufferSize: 512
+  writeBufferSize: 1024
+http:
+  addr: 0.0.0.0:8007
+  CORSAllowOrigins:
+    - '*'
+  logAllRequests: false
+  TLS:
+    enabled: true
+    certFile: tls/domain.crt
+    keyFile: tls/domain.key
+logging:
+  format: text
+  level: debug
+loadBalancing:
+  enable: false
+  onLockErrorTimeoutMs: 300
+  actionIDExpirationSec: 6
+  redis:
+    host: redis
+    port: 6379
+    password: ""
+    db: 0
+store:
+  type: file # oci/aws/az/file
+  file: /volume/ccstore.db
+  oci:
+    compartment: ocid1.tenancy.oc1...
+    vault: ocid1.vault.oc1...
+    secretEncryptionKey: ocid1.key.oc1...
+    configSecret: signing_agent_config
+  aws:
+    region: aws-region-...
+    configSecret: secrets_manager_secret...
+  az: ""
+  # ...

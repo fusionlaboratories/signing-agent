@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -Cue -o pipefail
+
+PROJECT_DIR="$(cd "$(dirname "${0}")/.."; pwd)"
+
+(
+  cd "$PROJECT_DIR"
+
+  rm -rf "${PROJECT_DIR}/out"
+)

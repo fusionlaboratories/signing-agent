@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -Cue -o pipefail
+
+PROJECT_DIR="$(cd "$(dirname "${0}")/.."; pwd)"
+
+(
+  cd "$PROJECT_DIR"
+
+  go test $(go list ./... | grep -v tests/e2e) -v -shuffle=on -short=t
+)
+
+# option:	-shuffle - Randomize the execution order of tests and benchmarks.
+# option:   -short [f|t] - You can set the return point inside of test function like `if testing.Short() { t.Skip() }`

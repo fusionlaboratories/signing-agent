@@ -1,0 +1,34 @@
+{
+  "name": "e2e Test Fund",
+  "description": "e2e Test Fund with agent policy",
+  "custodygroup_withdraw": {
+    "threshold": 1,
+    "members": [
+      "{{ . }}"
+    ]
+  },
+  "custodygroup_tx": {
+    "threshold": 1,
+    "members": [
+      "{{ . }}"
+    ]
+  },
+  "wallets": [
+    {
+      "name": "e2e wallet with custom custody group",
+      "asset": "BTC-TESTNET",
+      "custodygroup_withdraw": {
+        "threshold": 1,
+        "members": [
+            "{{ . }}"
+        ]
+      },
+      "custodygroup_tx": {
+        "threshold": 1,
+        "members": [
+            "{{ . }}"
+        ]
+      }
+    }
+  ]
+}

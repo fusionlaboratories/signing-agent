@@ -1,0 +1,54 @@
+#!/usr/bin/bash
+
+set -ue
+
+PROJECT_DIR="$(cd "$(dirname "${0}")/.."; pwd)"
+
+(
+	echo "Building Milagro Crypt C library"
+	export BUILD_PATH=/tmp/libs
+	export LIBRARY_PATH=$BUILD_PATH/lib
+	export C_INCLUDE_PATH=$BUILD_PATH/include
+	export LIBS_PATH=/tmp/libs
+	export LIBRARY_PATH=$LIBS_PATH/lib
+	export C_INCLUDE_PATH=$LIBS_PATH/include
+	export PROJECT_PATH=/src/github.com/qredo/dta
+	export CGO_LDFLAGS="-L $LIBS_PATH/lib64"
+	export CGO_CPPFLAGS="-I $C_INCLUDE_PATH -I $C_INCLUDE_PATH/amcl"
+
+    git clone https://github.com/apache/incubator-milagro-crypto-c.git && \
+	  cd incubator-milagro-crypto-c && \
+    mkdir build && \
+    cd build && \
+    cmake \
+      -D CMAKE_BUILD_TYPE=Release \
+      -D BUILD_SHARED_LIBS=OFF \
+      -D AMCL_CHUNK=64 \
+      -D WORD_SIZE=64 \
+      -D AMCL_CURVE="BLS381,SECP256K1" \
+      -D AMCL_RSA="" \
+      -D BUILD_PYTHON=OFF \
+      -D BUILD_BLS=ON \
+      -D BUILD_WCC=OFF \
+      -D BUILD_MPIN=ON \
+      -D BUILD_X509=OFF \
+      -D CMAKE_INSTALL_PREFIX=$BUILD_PATH .. && \
+    make && \
+    make test && \
+    make install
+
+	echo "Running e2e test"
+	cd "$PROJECT_DIR"
+
+  echo $OCI_RSA > "$(pwd)/oci_rsa.b64"
+  PEM_PATH="$(pwd)/oci_rsa.pem"
+  base64 -d "$(pwd)/oci_rsa.b64" > $PEM_PATH
+
+  mkdir -p /home/gitlab-runner/.oci
+  sed "s~patch-me-oci-pem~$PEM_PATH~" "$OCI_CONFIG" > "/home/gitlab-runner/.oci/config"
+
+  go test -v tests/e2e/storeaws_test.go
+  go test -v tests/e2e/storeoci_test.go
+  go test -v tests/e2e/register_flow_test.go tests/e2e/action_autoapprove_test.go
+
+)

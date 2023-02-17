@@ -1,0 +1,6 @@
+[DEFAULT]
+user=ocid1.user.oc1..aaaaaaaal64azpvmjrobfkoqawa6nsymgbdr5haojuhkozjnig5nkjei454q
+fingerprint=40:e1:c3:dd:f5:68:31:63:2e:85:76:d3:36:1d:01:0e
+tenancy=ocid1.tenancy.oc1..aaaaaaaadafjxsqm75w2acvxvox2ptwk2qqnp6sv3mwybqdmxsxnjveqbybq
+region=eu-amsterdam-1
+keyFile=/opt/keys/oci.pem

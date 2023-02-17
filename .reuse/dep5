@@ -1,0 +1,13 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: apitool (Qredo)
+Upstream-Contact: Qredo Ltd. <support@qredo.com>
+Source: qredo.com
+
+Files: *
+Copyright: 2022 Qredo Ltd.
+License: Apache-2.0
+
+Files: crypto/*
+Copyright: 2022 Apache Software Foundation
+           2022 Qredo Ltd.
+License: Apache-2.0

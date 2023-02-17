@@ -1,0 +1,40 @@
+version: '3.5'
+services:
+  aa:
+    image: signing-agent:dev
+    ports:
+      - "8007"
+    restart: "always"
+    networks:
+      - "aa.network"
+    deploy:
+      replicas: 3
+    volumes:
+      - ../../config.yaml:/volume/config.yaml
+      - ../../ccstore.db:/volume/ccstore.db
+      - ../../tls:/tls
+    depends_on:
+      - redis
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx_tls.conf:/etc/nginx/nginx.conf:ro
+      - ../../tls:/tls
+    ports:
+      - "9090:9090"
+    networks:
+      - "aa.network"
+    depends_on:
+      - aa
+  redis:
+    image: redis:alpine
+    container_name: "redis-db"
+    networks:
+      - "aa.network"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+networks:
+  aa.network:
+volumes:
+  redis-data:

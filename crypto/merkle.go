@@ -1,0 +1,260 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+package crypto
+
+import (
+	"bytes"
+	"encoding/hex"
+	"fmt"
+	"math"
+
+	"github.com/pkg/errors"
+)
+
+// This is forked from https://github.com/btcsuite/btcd/blob/master/blockchain/merkle.go
+
+// BuildMerkleTreeStore creates a merkle tree from a slice of Qredo assets (block data),
+// stores it using a linear array, and returns a slice of the backing array.
+// The following describes a merkle tree and how it is stored in a linear array.
+//
+// A merkle tree is a tree in which every non-leaf node is the hash of its
+// children nodes.  A diagram depicting how this works for bitcoin transactions
+// where h(x) is a double sha256 follows:
+//
+//	         root = h1234 = h(h12 + h34)
+//	        /                           \
+//	  h12 = h(h1 + h2)            h34 = h(h3 + h4)
+//	   /            \              /            \
+//	h1 = h(tx1)  h2 = h(tx2)    h3 = h(tx3)  h4 = h(tx4)
+//
+// The above stored as a linear array is as follows:
+//
+// 	[h1 h2 h3 h4 h12 h34 root]
+//
+// As the above shows, the merkle root is always the last element in the array.
+//
+// The number of inputs is not always a power of two which results in a
+// balanced tree structure as above.  In that case, parent nodes with no
+// children are also zero and parent nodes with only a single left node
+// are calculated by concatenating the left node with itself before hashing.
+// Since this function uses nodes that are pointers to the hashes, empty nodes
+// will be nil.
+//
+// The additional bool parameter indicates if we are generating the merkle tree
+// using witness transaction id's rather than regular transaction id's. This
+// also presents an additional case wherein the wtxid of the coinbase transaction
+// is the zeroHash.
+
+// nextPowerOfTwo returns the next highest power of two from a given number if
+// it is not already a power of two.  This is a helper function used during the
+// calculation of a merkle tree.
+func nextPowerOfTwo(n int) int {
+	// Return the number if it's already a power of 2.
+	if n&(n-1) == 0 {
+		return n
+	}
+
+	// Figure out and return the next power of two.
+	exponent := uint(math.Log2(float64(n))) + 1
+	return 1 << exponent // 2^exponent
+}
+
+// HashMerkleBranches takes two hashes, treated as the left and right tree
+// nodes, and returns the hash of their concatenation.  This is a helper
+// function used to aid in the generation of a merkle tree.
+func HashMerkleBranchesB(left *[]byte, right *[]byte) *[]byte {
+	// Concatenate the left and right nodes.
+	var hash [HashSize * 2]byte
+	copy(hash[:HashSize], *left)
+	copy(hash[HashSize:], *right)
+
+	newHash := DoubleHashB(hash[:])
+	return &newHash
+}
+
+// Merkle tree builder takes in a byte slice array and returns (pointer) array of
+// hashes represeting the tree nodes. The final element is the Merkle Root.
+func BuildMerkleTreeStore(assets [][]byte) (merkles []*[]byte, err error) {
+	if len(assets) == 0 {
+		return nil, errors.New("Cannot build tree from empty array.")
+	}
+	// Edge case:  len(assets) = 1,  return hass of element
+	switch len(assets) == 1 {
+	case true:
+		rootbytes := HashB(assets[0])
+		merkles = append(merkles, &assets[0])
+		merkles = append(merkles, &rootbytes)
+		return merkles, nil
+	case false:
+		// Calculate how many entries are required to hold the binary merkle
+		// tree as a linear array and create an array of that size.
+		nextPoT := nextPowerOfTwo(len(assets))
+		arraySize := nextPoT*2 - 1
+		merkles = make([]*[]byte, arraySize)
+
+		// Create the base transaction hashes and populate the array with them.
+		for i, tx := range assets {
+			// We want to compute the hash
+			if tx == nil {
+				return nil, errors.New("Invalid leaf. Input must be a non-empty byte slice.")
+			}
+			// Error occurs here, tx is sometimes a nil/invalid pointer
+			leafbytes := HashB(tx)
+			merkles[i] = &leafbytes
+		}
+
+		// Start the array offset after the last transaction and adjusted to the
+		// next power of two.
+		offset := nextPoT
+		for i := 0; i < arraySize-1; i += 2 {
+			switch {
+			// When there is no left child node, the parent is nil too.
+			case merkles[i] == nil:
+				merkles[offset] = nil
+
+			// When there is no right child, the parent is generated by
+			// hashing the concatenation of the left child with itself.
+			case merkles[i+1] == nil:
+				newHash := HashMerkleBranchesB(merkles[i], merkles[i])
+				merkles[offset] = newHash
+
+			// The normal case sets the parent node to the double sha256
+			// of the concatentation of the left and right children.
+			default:
+				newHash := HashMerkleBranchesB(merkles[i], merkles[i+1])
+				merkles[offset] = newHash
+			}
+			offset++
+		}
+		return merkles, nil
+
+	}
+	return nil, err
+}
+
+// GenerateProofFromTree generates a set memebership proof for an asset if and only if
+// that asset is a leaf element in of the Merkle Tree (tree) supplied with position (pos)
+// Note that for this generator the asset has to match both the value and the address of the tree element
+// with the position specified i.e. it has to be an element of the tree supplied to the generator.
+func GenerateProofFromTree(asset *[]byte, pos int, tree []*[]byte) (proof []*[]byte, err error) {
+	// Takes in an asset (leaf element) position and merkle tree
+	if len(tree) < 2 {
+		return nil, errors.New("Input Merkle tree must be non-empty hash array.")
+	}
+	if asset != tree[pos] {
+		return nil, errors.New("Mismatch. Invalid Merkle tree for asset argument.")
+	}
+	switch len(tree) == 2 {
+	case true:
+		proof = append(proof, tree[0])
+		proof = append(proof, tree[1])
+		return proof, nil
+	case false:
+		leftByte := []byte{0}
+		rightByte := []byte{1}
+
+		// Leaf lenth should be power of 2 i.e. len(tree) + 1 should be power of 2
+		leafLength := (len(tree) + 1) / 2
+
+		// Tree height (inlcuding leaf row) should be Log2 of leaf length
+		nPoT := nextPowerOfTwo(len(tree))
+		treeHeight := int(math.Log2(float64(nPoT)))
+
+		// Switch between here and
+		proof = append(proof, tree[pos])
+
+		c := 0
+		// Locate Internal hashes for proof
+		for i := 0; i < treeHeight-1; i++ {
+			switch {
+			case pos%2 == 0:
+				proof = append(proof, &rightByte)
+				// Concatenate with self if next element is nil
+				// Can occur if number of leaves is not a power of two
+				nextpos := tree[pos+1+c]
+				if nextpos == nil {
+					proof = append(proof, tree[pos+c])
+				} else {
+					proof = append(proof, nextpos)
+				}
+			case pos%2 == 1:
+				proof = append(proof, &leftByte)
+				// Still need to find the correct index map
+				proof = append(proof, tree[pos-1+c])
+			}
+			c += leafLength
+			pos = pos / 2
+			leafLength = leafLength / 2
+		}
+		proof = append(proof, tree[pos+c])
+		return proof, nil
+	}
+	return nil, err
+}
+
+// CopyProof Returns a copy of proof for use outside the application
+func CopyProof(Proof []*[]byte) (ProofCopy [][]byte, err error) {
+	// Return a copy of the values in a Merkle proof
+	for i, item := range Proof {
+		if item == nil {
+			return nil, fmt.Errorf("invalid input: %v .Contains nil pointers", i)
+		}
+		ProofCopy = append(ProofCopy, *item)
+	}
+	return ProofCopy, nil
+}
+
+// Verify Merkle proof. Function takes in a root hash and a proof (byte array) and
+// returns nil if the proof is valid.
+func Verify(root []byte, args [][]byte) (err error) {
+	if !bytes.Equal(root, args[len(args)-1]) {
+		return errors.Errorf("Root hash in proof doesn't match first argument: expected %+v but got %+v",
+			root, args[len(args)-1])
+	}
+	// Edge case (Merkle tree with single element).
+	switch len(args) == 2 {
+	case true:
+		test := HashB(args[0])
+		if bytes.Equal(test, root) {
+			return nil
+		} else {
+			return errors.Errorf("Incorrect Hash preimage..\n Expected %+v \n but got %+v",
+				hex.EncodeToString(root), hex.EncodeToString(test[:]))
+		}
+	case false:
+		leftByte := []byte{0}
+		rightByte := []byte{1}
+		// Use HashMerkleBranchesB (double hashing for intenal branch calculations)
+		res := &args[0]
+		for i := 0; i < len(args)/2-1; i++ {
+			switch {
+			case bytes.Equal(args[2*i+1], leftByte):
+				res = HashMerkleBranchesB(&args[2*i+2], res)
+			case bytes.Equal(args[2*i+1], rightByte):
+				res = HashMerkleBranchesB(res, &args[2*i+2])
+			}
+			// TODO
+		}
+		if !bytes.Equal(*res, root) {
+			return errors.Errorf("Merkle proof failed (invalid path).\n Expected %+v \n but got %+v",
+				hex.EncodeToString(root), hex.EncodeToString(*res))
+		}
+		return nil
+	}
+	return errors.New("Invalid proof. Incorrect arguments.")
+}

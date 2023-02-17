@@ -1,0 +1,3 @@
+# set these to reflect AWS Region and the Secrets Manager secret name used for testing
+region: eu-west-2
+configSecret: TheFirstTestSecret
