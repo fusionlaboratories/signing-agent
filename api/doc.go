@@ -26,40 +26,40 @@ type DOCGetClientResponse struct {
 
 // swagger:model ClientFeedResponse
 type DOCClientFeedResponse struct {
-	// The ID of the transaction
-	// example: 2IXwq4klvWbnPf1YaAc1XD85jJX
+	// The ID of the transaction.
+	// example: eXAmplElvWbnPf1YaAc1XD85jJX
 	ID string `json:"id"`
 
-	// The ID of the agent
-	// example: 98cTMMSPrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
+	// The ID of the agent.
+	// example: exAMplePrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
 	CoreClientID string `json:"coreClientID"`
 
-	// The type of the transaction
+	// The type of the transaction.
 	// enum: ApproveWithdraw,ApproveTransfer
 	// example: ApproveWithdraw
 	Type string `json:"type"`
 
-	// The status of the transaction
+	// The status of the transaction.
 	// enum: pending,expired,approved,rejected
 	// example: pending
 	Status string `json:"status"`
 
-	// The time that the transaction was started, utc unix time
+	// The time that the transaction was started, utc unix time.
 	// example: 1670341423
 	Timestamp int64 `json:"timestamp"`
 
-	// The time that the transaction will expire, utc unix time
+	// The time that the transaction will expire, utc unix time.
 	// example: 1676184187
 	ExpireTime int64 `json:"expireTime"`
 }
 
 // swagger:model ErrorResponse
 type DOCErrorResponse struct {
-	// The result code of the request
+	// The result code of the request.
 	// example: 404
 	Code int
 
-	// The result message of the request
+	// The result message of the request.
 	// example: Not found
 	Msg string
 }

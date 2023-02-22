@@ -3,11 +3,11 @@ definitions:
     AWSConfig:
         properties:
             configSecret:
-                description: The name of the AWS Secrets Manager secret containing the encrypted data
+                description: The name of the AWS Secrets Manager secret containing the encrypted data.
                 example: secrets_manager_secret
                 type: string
             region:
-                description: The AWS region where the secret is stored
+                description: The AWS region where the secret is stored.
                 example: eu-west-3
                 type: string
         title: 'AWSConfig-based Signing Agent config: used when Base `store` `type` is `aws`.'
@@ -15,8 +15,8 @@ definitions:
     ActionResponse:
         properties:
             actionID:
-                description: The ID of the transaction
-                example: 2IXwq4klvWbnPf1YaAc1XD85jJX
+                description: The ID of the transaction.
+                example: eXAmplElvWbnPf1YaAc1XD85jJX
                 type: string
             status:
                 description: The status of the transaction
@@ -28,27 +28,27 @@ definitions:
     AgentRegisterResponse:
         properties:
             agentID:
-                description: The ID of the agent
-                example: 98cTMMSPrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
+                description: The ID of the agent.
+                example: exAMplePrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
                 type: string
             feedURL:
-                description: The feed websocket URL
+                description: The feed WebSocket URL.
                 example: http://localhost:8007/api/v1/client/feed
                 type: string
         type: object
     AutoApprove:
         properties:
             enabled:
-                description: Activate the automatic approval of every transaction that is received
+                description: Activate the automatic approval of every transaction that is received.
                 example: true
                 type: boolean
             retryIntervalMaxSec:
-                description: The maximum time in which the signing agent retries to approve an action. After that, it’s considered as a failure
+                description: The maximum time over which the Signing Agent retries action approval. After this period, it’s considered as a failure.
                 example: 300
                 format: int64
                 type: integer
             retryIntervalSec:
-                description: The interval in which the Signing Agent is attempting to approve an action. It will retry until the `retryIntervalMaxSec` is reached
+                description: The interval over which the Signing Agent attempts to approve an action. It will cycle this interval until the `retryIntervalMaxSec` is reached.
                 example: 5
                 format: int64
                 type: integer
@@ -56,32 +56,32 @@ definitions:
     Base:
         properties:
             pin:
-                description: The pin number to use to provide a zero knowledge proof token for communication with the Partner API
+                description: The pin number to use to provide a zero knowledge proof token for communication with the Partner API.
                 example: 123456
                 format: int64
                 type: integer
             qredoAPI:
-                description: The URL of the Qredo API
+                description: The URL of the Qredo API.
                 example: https://sandbox-api.qredo.network
                 type: string
         type: object
     ClientFeedResponse:
         properties:
             coreClientID:
-                description: The ID of the agent
-                example: 98cTMMSPrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
+                description: The ID of the agent.
+                example: exAMplePrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
                 type: string
             expireTime:
-                description: The time that the transaction will expire, utc unix time
+                description: The time that the transaction will expire, utc unix time.
                 example: 1676184187
                 format: int64
                 type: integer
             id:
-                description: The ID of the transaction
-                example: 2IXwq4klvWbnPf1YaAc1XD85jJX
+                description: The ID of the transaction.
+                example: eXAmplElvWbnPf1YaAc1XD85jJX
                 type: string
             status:
-                description: The status of the transaction
+                description: The status of the transaction.
                 enum:
                     - pending
                     - expired
@@ -90,12 +90,12 @@ definitions:
                 example: pending
                 type: string
             timestamp:
-                description: The time that the transaction was started, utc unix time
+                description: The time that the transaction was started, utc unix time.
                 example: 1670341423
                 format: int64
                 type: integer
             type:
-                description: The type of the transaction
+                description: The type of the transaction.
                 enum:
                     - ApproveWithdraw
                     - ApproveTransfer
@@ -105,15 +105,15 @@ definitions:
     ClientRegisterRequest:
         properties:
             APIKey:
-                description: The API key for the partner API
+                description: The API key for the partner API.
                 example: eyJrZXkiOiJHM0Fo... (truncated)
                 type: string
             base64PrivateKey:
-                description: The Base64-encoded private key pem of which the public key has been registered in the Partner API
+                description: The Base64-encoded private key pem of which the public key has been registered in the Partner API.
                 example: LS0tLS1CRUdJTiBS... (truncated)
                 type: string
             name:
-                description: The name of the agent
+                description: The name of the agent.
                 example: test-agent
                 type: string
         type: object
@@ -137,34 +137,24 @@ definitions:
     ErrorResponse:
         properties:
             Code:
-                description: The result code of the request
+                description: The result code of the request.
                 example: 404
                 format: int64
                 type: integer
             Msg:
-                description: The result message of the request
+                description: The result message of the request.
                 example: Not found
                 type: string
         type: object
     GetClientResponse:
         properties:
-            agentID:
-                description: The ID of the agent
-                example: 98cTMMSPrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
-                type: string
-            agentName:
-                description: The name of the agent
-                example: some-agent
-                type: string
-            feedURL:
-                description: The feed websocket URL
-                example: http://localhost:8007/api/v1/client/feed
-                type: string
+            Body:
+                $ref: '#/definitions/GetClientResponse'
         type: object
     HttpSettings:
         properties:
             CORSAllowOrigins:
-                description: The value of the Access-Control-Allow-Origin of the responses of the build in API
+                description: The value of the Access-Control-Allow-Origin of the responses of the build in API.
                 example: '''*'''
                 items:
                     type: string
@@ -172,27 +162,27 @@ definitions:
             TLS:
                 $ref: '#/definitions/TLSConfig'
             addr:
-                description: The address and port the service runs on [the bind address and port the build in API endpoints]
+                description: The address and port the service runs on [the bind address and port the build in API endpoints].
                 example: 0.0.0.0:8007
                 type: string
             logAllRequests:
-                description: Log all incoming requests to the build in API
+                description: Log all incoming requests to the build in API.
                 example: true
                 type: boolean
         type: object
     LoadBalancing:
         properties:
             actionIDExpirationSec:
-                description: The expiration of actionID variable in Redis in seconds
+                description: The expiration of actionID variable in Redis in seconds.
                 example: 6
                 format: int64
                 type: integer
             enable:
-                description: Enables the load-balancing logic
+                description: Enables the load-balancing logic.
                 example: true
                 type: boolean
             onLockErrorTimeoutMs:
-                description: The on lock timeout in milliseconds
+                description: The on lock timeout in milliseconds.
                 example: 300
                 format: int64
                 type: integer
@@ -202,38 +192,38 @@ definitions:
     Logging:
         properties:
             format:
-                description: The format of the logging
+                description: Output format of the log.
                 enum:
                     - text
-                    - ' json'
+                    - json
                 example: json
                 type: string
             level:
-                description: The level of the logging
+                description: Log level to be output.
                 enum:
                     - info
-                    - ' warn'
-                    - ' error'
-                    - ' debug'
+                    - warn
+                    - error
+                    - debug
                 example: debug
                 type: string
         type: object
     OciConfig:
         properties:
             compartment:
-                description: The OCID where the vault and encryption key reside
+                description: The OCID where the vault and encryption key reside.
                 example: ocid1.tenancy.oc1...
                 type: string
             configSecret:
-                description: The name of secret that will be used to store the data
+                description: The name of secret that will be used to store the data.
                 example: automated_approver_config
                 type: string
             secretEncryptionKey:
-                description: The encryption key used for both the secret and the data inside the secret
+                description: The encryption key used for both the secret and the data inside the secret.
                 example: ocid1.key.oc1...
                 type: string
             vault:
-                description: The OCID of the vault where the secret will be stored
+                description: The OCID of the vault where the secret will be stored.
                 example: ocid1.vault.oc1...
                 type: string
         title: 'OciConfig-based Signing Agent config: used when Base `store` `type` is `oci`.'
@@ -241,20 +231,20 @@ definitions:
     RedisConfig:
         properties:
             db:
-                description: Redis database to be selected after connecting to the server
+                description: Redis database to be selected after connecting to the server.
                 example: 0
                 format: int64
                 type: integer
             host:
-                description: The Redis host
+                description: The Redis host.
                 example: redis
                 type: string
             password:
-                description: The Redis password
+                description: The Redis password.
                 example: just a password
                 type: string
             port:
-                description: The Redis port
+                description: The Redis port.
                 example: 6379
                 format: int64
                 type: integer
@@ -270,88 +260,88 @@ definitions:
             aws:
                 $ref: '#/definitions/AWSConfig'
             file:
-                description: The path to the storage file when `file` store is used
+                description: The path to the storage file when `file` store is used.
                 example: /volume/ccstore.db
                 type: string
             oci:
                 $ref: '#/definitions/OciConfig'
             type:
-                description: The type of store to use to store the private key information for the Signing Agent
+                description: The type of store to use to store the private key information for the Signing Agent.
                 enum:
                     - file
-                    - ' oci'
-                    - ' aws'
+                    - oci
+                    - aws
                 example: file
                 type: string
         type: object
     TLSConfig:
         properties:
             certFile:
-                description: The cert file to use for the TLS server
+                description: The cert file to use for the TLS server.
                 example: tls/domain.crt
                 type: string
             enabled:
-                description: Enable TLS for the internal HTTP server
+                description: Enable TLS for the internal HTTP server.
                 example: true
                 type: boolean
             keyFile:
-                description: The key file to use for the TLS server
+                description: The key file to use for the TLS server.
                 example: tls/domain.key
                 type: string
         type: object
     VersionResponse:
         properties:
             buildDate:
-                description: The application build date
+                description: The application build date.
                 example: "2022-12-01"
                 type: string
             buildType:
-                description: The application build type
+                description: The application build type.
                 example: dev
                 type: string
             buildVersion:
-                description: The application build version
+                description: The application build version.
                 example: v1.0.0
                 type: string
         type: object
     WebSocketConfig:
         properties:
             pingPeriodSec:
-                description: The ping period for the ping handler in seconds
+                description: The ping period for the ping handler in seconds.
                 example: 5
                 format: int64
                 type: integer
             pongWaitSec:
-                description: The pong wait for the pong handler in seconds
+                description: The pong wait for the pong handler in seconds.
                 example: 10
                 format: int64
                 type: integer
             qredoWebsocket:
-                description: The URL of the Qredo websocket feed
-                example: wss://play-api.qredo.network/api/v1/p/coreclient/feed
+                description: The URL of the Qredo WebSocket feed.
+                example: wss://sandbox-api.qredo.network/api/v1/p/coreclient/feed
                 type: string
             readBufferSize:
-                description: The websocket upgrader read buffer size in bytes
+                description: The WebSocket upgrader read buffer size in bytes.
                 example: 512
                 format: int64
                 type: integer
             reconnectIntervalSec:
-                description: The reconnect interval in seconds
+                description: The reconnect interval in seconds.
                 example: 5
                 format: int64
                 type: integer
             reconnectTimeoutSec:
-                description: The reconnect timeout in seconds
+                description: The reconnect timeout in seconds.
                 example: 300
                 format: int64
                 type: integer
             writeBufferSize:
-                description: The websocket upgrader write buffer size in bytes
+                description: The WebSocket upgrader write buffer size in bytes.
                 example: 1024
                 format: int64
                 type: integer
             writeWaitSec:
-                description: The write wait in seconds
+                description: The write wait in seconds.
                 example: 10
                 format: int64
                 type: integer
@@ -359,25 +349,25 @@ definitions:
     WebsocketStatus:
         properties:
             connectedClients:
-                description: The number of connected feed clients
+                description: The number of connected feed clients.
                 example: 2
                 format: uint32
                 type: integer
             localFeedURL:
-                description: The local feed websocket URL
+                description: The local feed WebSocket URL.
                 example: http://localhost:8007/api/v1/client/feed
                 type: string
             readyState:
-                description: The state of the websocket connection with the server
+                description: The state of the WebSocket connection with the server.
                 enum:
                     - OPEN
-                    - ' CLOSED'
-                    - ' CONNECTING'
+                    - CLOSED
+                    - CONNECTING
                 example: OPEN
                 type: string
             remoteFeedURL:
-                description: The server websocket URL
-                example: wss://play-api.qredo.network/api/v1/p/coreclient/feed,
+                description: The server WebSocket URL.
+                example: wss://sandbox-api.qredo.network/api/v1/p/coreclient/feed,
                 type: string
         type: object
 host: localhost:8007
@@ -414,7 +404,7 @@ paths:
             description: This endpoint rejects a transaction based on the transaction ID, `action_id`, passed.
             operationId: actionReject
             parameters:
-                - description: the ID of the transaction that is received from the feed
+                - description: The ID of the transaction that is received from the feed.
                   in: path
                   name: action_id
                   required: true
@@ -445,7 +435,7 @@ paths:
             description: This endpoint approves a transaction based on the transaction ID, `action_id`, passed.
             operationId: ActionApprove
             parameters:
-                - description: the ID of the transaction that is received from the feed
+                - description: The ID of the transaction that is received from the feed.
                   in: path
                   name: action_id
                   required: true
