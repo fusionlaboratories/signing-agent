@@ -14,8 +14,8 @@ type CoreClientServiceActionApproveRequest struct {
 
 // swagger:model ActionResponse
 type ActionResponse struct {
-	// The ID of the transaction
-	// example: 2IXwq4klvWbnPf1YaAc1XD85jJX
+	// The ID of the transaction.
+	// example: eXAmplElvWbnPf1YaAc1XD85jJX
 	ActionID string `json:"actionID"`
 
 	// The status of the transaction

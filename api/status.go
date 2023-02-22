@@ -2,20 +2,20 @@ package api
 
 // swagger:model WebsocketStatus
 type WebsocketStatus struct {
-	// The state of the websocket connection with the server
-	// enum: OPEN, CLOSED, CONNECTING
+	// The state of the WebSocket connection with the server.
+	// enum: OPEN,CLOSED,CONNECTING
 	// example: OPEN
 	ReadyState string `json:"readyState"`
 
-	// The server websocket URL
-	// example: wss://play-api.qredo.network/api/v1/p/coreclient/feed,
+	// The server WebSocket URL.
+	// example: wss://sandbox-api.qredo.network/api/v1/p/coreclient/feed,
 	RemoteFeedUrl string `json:"remoteFeedURL"`
 
-	// The local feed websocket URL
+	// The local feed WebSocket URL.
 	// example: http://localhost:8007/api/v1/client/feed
 	LocalFeedUrl string `json:"localFeedURL"`
 
-	// The number of connected feed clients
+	// The number of connected feed clients.
 	// example: 2
 	ConnectedClients uint32 `json:"connectedClients"`
 }

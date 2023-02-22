@@ -56,7 +56,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "the ID of the transaction that is received from the feed",
+            "description": "The ID of the transaction that is received from the feed.",
             "name": "action_id",
             "in": "path",
             "required": true
@@ -102,7 +102,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "the ID of the transaction that is received from the feed",
+            "description": "The ID of the transaction that is received from the feed.",
             "name": "action_id",
             "in": "path",
             "required": true
@@ -282,12 +282,12 @@
       "title": "AWSConfig-based Signing Agent config: used when Base `store` `type` is `aws`.",
       "properties": {
         "configSecret": {
-          "description": "The name of the AWS Secrets Manager secret containing the encrypted data",
+          "description": "The name of the AWS Secrets Manager secret containing the encrypted data.",
           "type": "string",
           "example": "secrets_manager_secret"
         },
         "region": {
-          "description": "The AWS region where the secret is stored",
+          "description": "The AWS region where the secret is stored.",
           "type": "string",
           "example": "eu-west-3"
         }
@@ -297,9 +297,9 @@
       "type": "object",
       "properties": {
         "actionID": {
-          "description": "The ID of the transaction",
+          "description": "The ID of the transaction.",
           "type": "string",
-          "example": "2IXwq4klvWbnPf1YaAc1XD85jJX"
+          "example": "eXAmplElvWbnPf1YaAc1XD85jJX"
         },
         "status": {
           "description": "The status of the transaction",
@@ -315,12 +315,12 @@
       "type": "object",
       "properties": {
         "agentID": {
-          "description": "The ID of the agent",
+          "description": "The ID of the agent.",
           "type": "string",
-          "example": "98cTMMSPrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR"
+          "example": "exAMplePrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR"
         },
         "feedURL": {
-          "description": "The feed websocket URL",
+          "description": "The feed WebSocket URL.",
           "type": "string",
           "example": "http://localhost:8007/api/v1/client/feed"
         }
@@ -330,18 +330,18 @@
       "type": "object",
       "properties": {
         "enabled": {
-          "description": "Activate the automatic approval of every transaction that is received",
+          "description": "Activate the automatic approval of every transaction that is received.",
           "type": "boolean",
           "example": true
         },
         "retryIntervalMaxSec": {
-          "description": "The maximum time in which the signing agent retries to approve an action. After that, it’s considered as a failure",
+          "description": "The maximum time over which the Signing Agent retries action approval. After this period, it’s considered as a failure.",
           "type": "integer",
           "format": "int64",
           "example": 300
         },
         "retryIntervalSec": {
-          "description": "The interval in which the Signing Agent is attempting to approve an action. It will retry until the `retryIntervalMaxSec` is reached",
+          "description": "The interval over which the Signing Agent attempts to approve an action. It will cycle this interval until the `retryIntervalMaxSec` is reached.",
           "type": "integer",
           "format": "int64",
           "example": 5
@@ -352,13 +352,13 @@
       "type": "object",
       "properties": {
         "pin": {
-          "description": "The pin number to use to provide a zero knowledge proof token for communication with the Partner API",
+          "description": "The pin number to use to provide a zero knowledge proof token for communication with the Partner API.",
           "type": "integer",
           "format": "int64",
           "example": 123456
         },
         "qredoAPI": {
-          "description": "The URL of the Qredo API",
+          "description": "The URL of the Qredo API.",
           "type": "string",
           "example": "https://sandbox-api.qredo.network"
         }
@@ -368,23 +368,23 @@
       "type": "object",
       "properties": {
         "coreClientID": {
-          "description": "The ID of the agent",
+          "description": "The ID of the agent.",
           "type": "string",
-          "example": "98cTMMSPrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR"
+          "example": "exAMplePrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR"
         },
         "expireTime": {
-          "description": "The time that the transaction will expire, utc unix time",
+          "description": "The time that the transaction will expire, utc unix time.",
           "type": "integer",
           "format": "int64",
           "example": 1676184187
         },
         "id": {
-          "description": "The ID of the transaction",
+          "description": "The ID of the transaction.",
           "type": "string",
-          "example": "2IXwq4klvWbnPf1YaAc1XD85jJX"
+          "example": "eXAmplElvWbnPf1YaAc1XD85jJX"
         },
         "status": {
-          "description": "The status of the transaction",
+          "description": "The status of the transaction.",
           "type": "string",
           "enum": [
             "pending",
@@ -395,13 +395,13 @@
           "example": "pending"
         },
         "timestamp": {
-          "description": "The time that the transaction was started, utc unix time",
+          "description": "The time that the transaction was started, utc unix time.",
           "type": "integer",
           "format": "int64",
           "example": 1670341423
         },
         "type": {
-          "description": "The type of the transaction",
+          "description": "The type of the transaction.",
           "type": "string",
           "enum": [
             "ApproveWithdraw",
@@ -415,17 +415,17 @@
       "type": "object",
       "properties": {
         "APIKey": {
-          "description": "The API key for the partner API",
+          "description": "The API key for the partner API.",
           "type": "string",
           "example": "eyJrZXkiOiJHM0Fo... (truncated)"
         },
         "base64PrivateKey": {
-          "description": "The Base64-encoded private key pem of which the public key has been registered in the Partner API",
+          "description": "The Base64-encoded private key pem of which the public key has been registered in the Partner API.",
           "type": "string",
           "example": "LS0tLS1CRUdJTiBS... (truncated)"
         },
         "name": {
-          "description": "The name of the agent",
+          "description": "The name of the agent.",
           "type": "string",
           "example": "test-agent"
         }
@@ -461,13 +461,13 @@
       "type": "object",
       "properties": {
         "Code": {
-          "description": "The result code of the request",
+          "description": "The result code of the request.",
           "type": "integer",
           "format": "int64",
           "example": 404
         },
         "Msg": {
-          "description": "The result message of the request",
+          "description": "The result message of the request.",
           "type": "string",
           "example": "Not found"
         }
@@ -476,20 +476,8 @@
     "GetClientResponse": {
       "type": "object",
       "properties": {
-        "agentID": {
-          "description": "The ID of the agent",
-          "type": "string",
-          "example": "98cTMMSPrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR"
-        },
-        "agentName": {
-          "description": "The name of the agent",
-          "type": "string",
-          "example": "some-agent"
-        },
-        "feedURL": {
-          "description": "The feed websocket URL",
-          "type": "string",
-          "example": "http://localhost:8007/api/v1/client/feed"
+        "Body": {
+          "$ref": "#/definitions/GetClientResponse"
         }
       }
     },
@@ -497,7 +485,7 @@
       "type": "object",
       "properties": {
         "CORSAllowOrigins": {
-          "description": "The value of the Access-Control-Allow-Origin of the responses of the build in API",
+          "description": "The value of the Access-Control-Allow-Origin of the responses of the build in API.",
           "type": "array",
           "items": {
             "type": "string"
@@ -508,12 +496,12 @@
           "$ref": "#/definitions/TLSConfig"
         },
         "addr": {
-          "description": "The address and port the service runs on [the bind address and port the build in API endpoints]",
+          "description": "The address and port the service runs on [the bind address and port the build in API endpoints].",
           "type": "string",
           "example": "0.0.0.0:8007"
         },
         "logAllRequests": {
-          "description": "Log all incoming requests to the build in API",
+          "description": "Log all incoming requests to the build in API.",
           "type": "boolean",
           "example": true
         }
@@ -523,18 +511,18 @@
       "type": "object",
       "properties": {
         "actionIDExpirationSec": {
-          "description": "The expiration of actionID variable in Redis in seconds",
+          "description": "The expiration of actionID variable in Redis in seconds.",
           "type": "integer",
           "format": "int64",
           "example": 6
         },
         "enable": {
-          "description": "Enables the load-balancing logic",
+          "description": "Enables the load-balancing logic.",
           "type": "boolean",
           "example": true
         },
         "onLockErrorTimeoutMs": {
-          "description": "The on lock timeout in milliseconds",
+          "description": "The on lock timeout in milliseconds.",
           "type": "integer",
           "format": "int64",
           "example": 300
@@ -548,22 +536,22 @@
       "type": "object",
       "properties": {
         "format": {
-          "description": "The format of the logging",
+          "description": "Output format of the log.",
           "type": "string",
           "enum": [
             "text",
-            " json"
+            "json"
           ],
           "example": "json"
         },
         "level": {
-          "description": "The level of the logging",
+          "description": "Log level to be output.",
           "type": "string",
           "enum": [
             "info",
-            " warn",
-            " error",
-            " debug"
+            "warn",
+            "error",
+            "debug"
           ],
           "example": "debug"
         }
@@ -574,22 +562,22 @@
       "title": "OciConfig-based Signing Agent config: used when Base `store` `type` is `oci`.",
       "properties": {
         "compartment": {
-          "description": "The OCID where the vault and encryption key reside",
+          "description": "The OCID where the vault and encryption key reside.",
           "type": "string",
           "example": "ocid1.tenancy.oc1..."
         },
         "configSecret": {
-          "description": "The name of secret that will be used to store the data",
+          "description": "The name of secret that will be used to store the data.",
           "type": "string",
           "example": "automated_approver_config"
         },
         "secretEncryptionKey": {
-          "description": "The encryption key used for both the secret and the data inside the secret",
+          "description": "The encryption key used for both the secret and the data inside the secret.",
           "type": "string",
           "example": "ocid1.key.oc1..."
         },
         "vault": {
-          "description": "The OCID of the vault where the secret will be stored",
+          "description": "The OCID of the vault where the secret will be stored.",
           "type": "string",
           "example": "ocid1.vault.oc1..."
         }
@@ -600,23 +588,23 @@
       "title": "RedisConfig-based Signing Agent config: used when LoadBalancing `enable` is `true`.",
       "properties": {
         "db": {
-          "description": "Redis database to be selected after connecting to the server",
+          "description": "Redis database to be selected after connecting to the server.",
           "type": "integer",
           "format": "int64",
           "example": 0
         },
         "host": {
-          "description": "The Redis host",
+          "description": "The Redis host.",
           "type": "string",
           "example": "redis"
         },
         "password": {
-          "description": "The Redis password",
+          "description": "The Redis password.",
           "type": "string",
           "example": "just a password"
         },
         "port": {
-          "description": "The Redis port",
+          "description": "The Redis port.",
           "type": "integer",
           "format": "int64",
           "example": 6379
@@ -638,7 +626,7 @@
           "$ref": "#/definitions/AWSConfig"
         },
         "file": {
-          "description": "The path to the storage file when `file` store is used",
+          "description": "The path to the storage file when `file` store is used.",
           "type": "string",
           "example": "/volume/ccstore.db"
         },
@@ -646,12 +634,12 @@
           "$ref": "#/definitions/OciConfig"
         },
         "type": {
-          "description": "The type of store to use to store the private key information for the Signing Agent",
+          "description": "The type of store to use to store the private key information for the Signing Agent.",
           "type": "string",
           "enum": [
             "file",
-            " oci",
-            " aws"
+            "oci",
+            "aws"
           ],
           "example": "file"
         }
@@ -661,17 +649,17 @@
       "type": "object",
       "properties": {
         "certFile": {
-          "description": "The cert file to use for the TLS server",
+          "description": "The cert file to use for the TLS server.",
           "type": "string",
           "example": "tls/domain.crt"
         },
         "enabled": {
-          "description": "Enable TLS for the internal HTTP server",
+          "description": "Enable TLS for the internal HTTP server.",
           "type": "boolean",
           "example": true
         },
         "keyFile": {
-          "description": "The key file to use for the TLS server",
+          "description": "The key file to use for the TLS server.",
           "type": "string",
           "example": "tls/domain.key"
         }
@@ -681,17 +669,17 @@
       "type": "object",
       "properties": {
         "buildDate": {
-          "description": "The application build date",
+          "description": "The application build date.",
           "type": "string",
           "example": "2022-12-01"
         },
         "buildType": {
-          "description": "The application build type",
+          "description": "The application build type.",
           "type": "string",
           "example": "dev"
         },
         "buildVersion": {
-          "description": "The application build version",
+          "description": "The application build version.",
           "type": "string",
           "example": "v1.0.0"
         }
@@ -701,48 +689,48 @@
       "type": "object",
       "properties": {
         "pingPeriodSec": {
-          "description": "The ping period for the ping handler in seconds",
+          "description": "The ping period for the ping handler in seconds.",
           "type": "integer",
           "format": "int64",
           "example": 5
         },
         "pongWaitSec": {
-          "description": "The pong wait for the pong handler in seconds",
+          "description": "The pong wait for the pong handler in seconds.",
           "type": "integer",
           "format": "int64",
           "example": 10
         },
         "qredoWebsocket": {
-          "description": "The URL of the Qredo websocket feed",
+          "description": "The URL of the Qredo WebSocket feed.",
           "type": "string",
-          "example": "wss://play-api.qredo.network/api/v1/p/coreclient/feed"
+          "example": "wss://sandbox-api.qredo.network/api/v1/p/coreclient/feed"
         },
         "readBufferSize": {
-          "description": "The websocket upgrader read buffer size in bytes",
+          "description": "The WebSocket upgrader read buffer size in bytes.",
           "type": "integer",
           "format": "int64",
           "example": 512
         },
         "reconnectIntervalSec": {
-          "description": "The reconnect interval in seconds",
+          "description": "The reconnect interval in seconds.",
           "type": "integer",
           "format": "int64",
           "example": 5
         },
         "reconnectTimeoutSec": {
-          "description": "The reconnect timeout in seconds",
+          "description": "The reconnect timeout in seconds.",
           "type": "integer",
           "format": "int64",
           "example": 300
         },
         "writeBufferSize": {
-          "description": "The websocket upgrader write buffer size in bytes",
+          "description": "The WebSocket upgrader write buffer size in bytes.",
           "type": "integer",
           "format": "int64",
           "example": 1024
         },
         "writeWaitSec": {
-          "description": "The write wait in seconds",
+          "description": "The write wait in seconds.",
           "type": "integer",
           "format": "int64",
           "example": 10
@@ -753,30 +741,30 @@
       "type": "object",
       "properties": {
         "connectedClients": {
-          "description": "The number of connected feed clients",
+          "description": "The number of connected feed clients.",
           "type": "integer",
           "format": "uint32",
           "example": 2
         },
         "localFeedURL": {
-          "description": "The local feed websocket URL",
+          "description": "The local feed WebSocket URL.",
           "type": "string",
           "example": "http://localhost:8007/api/v1/client/feed"
         },
         "readyState": {
-          "description": "The state of the websocket connection with the server",
+          "description": "The state of the WebSocket connection with the server.",
           "type": "string",
           "enum": [
             "OPEN",
-            " CLOSED",
-            " CONNECTING"
+            "CLOSED",
+            "CONNECTING"
           ],
           "example": "OPEN"
         },
         "remoteFeedURL": {
-          "description": "The server websocket URL",
+          "description": "The server WebSocket URL.",
           "type": "string",
-          "example": "wss://play-api.qredo.network/api/v1/p/coreclient/feed,"
+          "example": "wss://sandbox-api.qredo.network/api/v1/p/coreclient/feed,"
         }
       }
     }

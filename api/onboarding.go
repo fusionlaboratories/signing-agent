@@ -12,15 +12,15 @@ const (
 
 // swagger:model ClientRegisterRequest
 type ClientRegisterRequest struct {
-	// The name of the agent
+	// The name of the agent.
 	// example: test-agent
 	Name string `json:"name"`
 
-	// The API key for the partner API
+	// The API key for the partner API.
 	// example: eyJrZXkiOiJHM0Fo... (truncated)
 	APIKey string `json:"APIKey"`
 
-	// The Base64-encoded private key pem of which the public key has been registered in the Partner API
+	// The Base64-encoded private key pem of which the public key has been registered in the Partner API.
 	// example: LS0tLS1CRUdJTiBS... (truncated)
 	Base64PrivateKey string `json:"base64PrivateKey"`
 }
@@ -101,26 +101,26 @@ type QredoRegisterInitResponse struct {
 
 // swagger:model AgentRegisterResponse
 type AgentRegisterResponse struct {
-	// The ID of the agent
-	// example: 98cTMMSPrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
+	// The ID of the agent.
+	// example: exAMplePrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
 	AgentID string `json:"agentID"`
 
-	// The feed websocket URL
+	// The feed WebSocket URL.
 	// example: http://localhost:8007/api/v1/client/feed
 	FeedURL string `json:"feedURL"`
 }
 
 // swagger:model GetClientResponse
 type GetClientResponse struct {
-	// The ID of the agent
-	// example: 98cTMMSPrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
+	// The ID of the agent.
+	// example: exAMplePrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
 	AgentID string `json:"agentID"`
 
-	// The name of the agent
+	// The name of the agent.
 	// example: some-agent
 	AgentName string `json:"agentName"`
 
-	// The feed websocket URL
+	// The feed WebSocket URL.
 	// example: http://localhost:8007/api/v1/client/feed
 	FeedURL string `json:"feedURL"`
 }
