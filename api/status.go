@@ -12,7 +12,7 @@ type WebsocketStatus struct {
 	RemoteFeedUrl string `json:"remoteFeedURL"`
 
 	// The local feed WebSocket URL.
-	// example: http://localhost:8007/api/v1/client/feed
+	// example: ws://localhost:8007/api/v1/client/feed
 	LocalFeedUrl string `json:"localFeedURL"`
 
 	// The number of connected feed clients.

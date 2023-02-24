@@ -104,7 +104,7 @@ type Store struct {
 	AwsConfig AWSConfig `yaml:"aws" json:"aws"`
 }
 
-// OciConfig-based Signing Agent config: used when Base `store` `type` is `oci`.
+// OciConfig is the OCI configuration when Base store type is set to oci
 type OciConfig struct {
 	// The OCID where the vault and encryption key reside.
 	// example: ocid1.tenancy.oc1...
@@ -123,7 +123,7 @@ type OciConfig struct {
 	ConfigSecret string `yaml:"configSecret" json:"configSecret"`
 }
 
-// AWSConfig-based Signing Agent config: used when Base `store` `type` is `aws`.
+// AWSConfig is the AWS configuration when Base store type is set to aws
 type AWSConfig struct {
 	// The AWS region where the secret is stored.
 	// example: eu-west-3
@@ -177,7 +177,7 @@ type LoadBalancing struct {
 	RedisConfig           RedisConfig `yaml:"redis" json:"redis"`
 }
 
-// RedisConfig-based Signing Agent config: used when LoadBalancing `enable` is `true`.
+// RedisConfig is the redis configuration when LoadBalancing is enabled
 type RedisConfig struct {
 	// The Redis host.
 	// example: redis
