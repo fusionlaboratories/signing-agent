@@ -278,8 +278,8 @@
   },
   "definitions": {
     "AWSConfig": {
+      "description": "AWSConfig is the AWS configuration when Base store type is set to aws",
       "type": "object",
-      "title": "AWSConfig-based Signing Agent config: used when Base `store` `type` is `aws`.",
       "properties": {
         "configSecret": {
           "description": "The name of the AWS Secrets Manager secret containing the encrypted data.",
@@ -558,8 +558,8 @@
       }
     },
     "OciConfig": {
+      "description": "OciConfig is the OCI configuration when Base store type is set to oci",
       "type": "object",
-      "title": "OciConfig-based Signing Agent config: used when Base `store` `type` is `oci`.",
       "properties": {
         "compartment": {
           "description": "The OCID where the vault and encryption key reside.",
@@ -584,8 +584,8 @@
       }
     },
     "RedisConfig": {
+      "description": "RedisConfig is the redis configuration when LoadBalancing is enabled",
       "type": "object",
-      "title": "RedisConfig-based Signing Agent config: used when LoadBalancing `enable` is `true`.",
       "properties": {
         "db": {
           "description": "Redis database to be selected after connecting to the server.",
@@ -749,7 +749,7 @@
         "localFeedURL": {
           "description": "The local feed WebSocket URL.",
           "type": "string",
-          "example": "http://localhost:8007/api/v1/client/feed"
+          "example": "ws://localhost:8007/api/v1/client/feed"
         },
         "readyState": {
           "description": "The state of the WebSocket connection with the server.",

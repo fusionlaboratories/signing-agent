@@ -1,6 +1,7 @@
 basePath: /api/v1
 definitions:
     AWSConfig:
+        description: AWSConfig is the AWS configuration when Base store type is set to aws
         properties:
             configSecret:
                 description: The name of the AWS Secrets Manager secret containing the encrypted data.
@@ -10,7 +11,6 @@ definitions:
                 description: The AWS region where the secret is stored.
                 example: eu-west-3
                 type: string
-        title: 'AWSConfig-based Signing Agent config: used when Base `store` `type` is `aws`.'
         type: object
     ActionResponse:
         properties:
@@ -148,8 +148,18 @@ definitions:
         type: object
     GetClientResponse:
         properties:
-            Body:
-                $ref: '#/definitions/GetClientResponse'
+            agentID:
+                description: The ID of the agent.
+                example: exAMplePrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
+                type: string
+            agentName:
+                description: The name of the agent.
+                example: some-agent
+                type: string
+            feedURL:
+                description: The feed WebSocket URL.
+                example: http://localhost:8007/api/v1/client/feed
+                type: string
         type: object
     HttpSettings:
         properties:
@@ -209,6 +219,7 @@ definitions:
                 type: string
         type: object
     OciConfig:
+        description: OciConfig is the OCI configuration when Base store type is set to oci
         properties:
             compartment:
                 description: The OCID where the vault and encryption key reside.
@@ -226,9 +237,9 @@ definitions:
                 description: The OCID of the vault where the secret will be stored.
                 example: ocid1.vault.oc1...
                 type: string
-        title: 'OciConfig-based Signing Agent config: used when Base `store` `type` is `oci`.'
         type: object
     RedisConfig:
+        description: RedisConfig is the redis configuration when LoadBalancing is enabled
         properties:
             db:
                 description: Redis database to be selected after connecting to the server.
@@ -248,7 +259,6 @@ definitions:
                 example: 6379
                 format: int64
                 type: integer
-        title: 'RedisConfig-based Signing Agent config: used when LoadBalancing `enable` is `true`.'
         type: object
     StatusResponse:
         properties:
@@ -355,7 +365,7 @@ definitions:
                 type: integer
             localFeedURL:
                 description: The local feed WebSocket URL.
-                example: http://localhost:8007/api/v1/client/feed
+                example: ws://localhost:8007/api/v1/client/feed
                 type: string
             readyState:
                 description: The state of the WebSocket connection with the server.
