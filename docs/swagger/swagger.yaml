@@ -1,3 +1,4 @@
+security: []
 basePath: /api/v1
 definitions:
     AWSConfig:
@@ -148,18 +149,8 @@ definitions:
         type: object
     GetClientResponse:
         properties:
-            agentID:
-                description: The ID of the agent.
-                example: exAMplePrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
-                type: string
-            agentName:
-                description: The name of the agent.
-                example: some-agent
-                type: string
-            feedURL:
-                description: The feed WebSocket URL.
-                example: http://localhost:8007/api/v1/client/feed
-                type: string
+            Body:
+                $ref: '#/definitions/GetClientResponse'
         type: object
     HttpSettings:
         properties:

@@ -1,12 +1,15 @@
-Running Signing Agent as container:
+Running Signing Agent as a Docker container:
 
-- create a separate docker network: `docker network create signing-agent-net`
-- create a stopped docker container for the signing-agent: `docker create --name temp_signing_agent signing-agent:latest`
+- create a separate Docker network: `docker network create signing-agent-net`
+- create a stopped Docker container for the Signing Agent: `docker create --name temp_signing_agent signing-agent:latest`
 - create an empty folder to store config and data (if store type is file): `mkdir -p ./volume`
 - copy the config template from the created container local: `docker cp temp_signing_agent:/signing-agent/config-template.yaml ./volume/config.yaml`
-- edit the config.yaml to your likings, see the configuration.md manual
+- edit the config.yaml as per your requirements
+
+    > See the guide to [configuration](www.developers.qredo.com/developer-guides/signing-agent/configure.md)
+
 - delete the temporary container `docker rm temp_signing_agent`
-- start a signing-agent container with the volume folder mounted in and connected to the previously created network:
+- start a Signing Agent container with the volume folder mounted in and connected to the previously created network:
 ```
 docker run --detach \
  --name signing-agent \
@@ -19,9 +22,9 @@ docker run --detach \
 Running the javascript example inside a container:
 
 - go to the example folder
-- download a nodejs docker image: `docker pull node:18.12.0-slim`
+- download a nodejs Docker image: `docker pull node:18.12.0-slim`
 - download the node packages: `npm install`
-- run a docker container with the js example and the private.pem file mounted in, set the environment variables as needed:
+- run a Docker container with the js example and the private.pem file mounted in, set the environment variables as needed:
 ```
 docker run -ti --rm --name signing-agent-js-example --net signing-agent-net \
 -e SIGNING_AGENT_HOST=signing-agent \
