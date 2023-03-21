@@ -20,7 +20,7 @@ http:
     - '*'
   logAllRequests: false
   TLS:
-    enabled: true
+    enabled: false
     certFile: tls/domain.crt
     keyFile: tls/domain.key
 logging:
