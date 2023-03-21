@@ -3,7 +3,6 @@ package clients
 import (
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/qredo/signing-agent/autoapprover"
 	"github.com/qredo/signing-agent/clientfeed"
@@ -68,7 +67,6 @@ func (m *clientsManager) Start() {
 	}
 
 	autoApprover := autoapprover.NewAutoApprover(m.core, m.log, m.config, m.syncronizer)
-	<-time.After(5 * time.Millisecond)
 
 	m.feedHub.RegisterClient(&autoApprover.FeedClient)
 	go autoApprover.Listen()
