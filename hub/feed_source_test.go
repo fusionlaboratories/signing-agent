@@ -119,7 +119,7 @@ func TestWebsocketSource_Disconnect(t *testing.T) {
 	assert.Equal(t, websocket.CloseMessage, mock_conn.LastMessageType)
 }
 
-func TestWebsocketSource_Listen_don_t_reconnect(t *testing.T) {
+func TestWebsocketSource_Listen_shouldnt_reconnect(t *testing.T) {
 	//Arrange
 	defer goleak.VerifyNone(t)
 	mock_conn := &MockWebsocketConnection{
@@ -130,6 +130,38 @@ func TestWebsocketSource_Listen_don_t_reconnect(t *testing.T) {
 	sut := &websocketSource{
 		conn:            mock_conn,
 		shouldReconnect: false,
+		readyState:      defs.ConnectionState.Closed,
+		log:             util.NewTestLogger(),
+		rxMessages:      make(chan []byte),
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	//Act
+	go sut.Listen(&wg)
+	wg.Wait()
+	mock_conn.read <- true
+
+	//Assert
+	assert.Equal(t, defs.ConnectionState.Closed, sut.GetReadyState())
+	assert.True(t, mock_conn.ReadMessageCalled)
+
+	_, ok := <-sut.rxMessages //channel was closed
+	assert.False(t, ok)
+}
+
+func TestWebsocketSource_Listen_don_t_reconnect(t *testing.T) {
+	//Arrange
+	defer goleak.VerifyNone(t)
+	mock_conn := &MockWebsocketConnection{
+		NextError: errors.New("some error"),
+		read:      make(chan bool, 1),
+	}
+
+	sut := &websocketSource{
+		conn:            mock_conn,
+		shouldReconnect: true,
 		readyState:      defs.ConnectionState.Closed,
 		log:             util.NewTestLogger(),
 		rxMessages:      make(chan []byte),

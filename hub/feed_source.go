@@ -54,7 +54,7 @@ func NewWebsocketSource(dialer WebsocketDialer, feedUrl string, log *zap.Sugared
 		readyState:           defs.ConnectionState.Closed,
 		reconnectIntervalMax: time.Duration(config.ReconnectTimeOut) * time.Second,
 		reconnectInterval:    time.Duration(config.ReconnectInterval) * time.Second,
-		rxMessages:           make(chan []byte),
+		rxMessages:           make(chan []byte, 1),
 		lock:                 sync.RWMutex{},
 	}
 }

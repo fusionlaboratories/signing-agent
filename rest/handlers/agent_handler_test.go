@@ -6,81 +6,32 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"sync"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/goleak"
-	"go.uber.org/zap"
 
 	"github.com/qredo/signing-agent/api"
-	"github.com/qredo/signing-agent/autoapprover"
-	"github.com/qredo/signing-agent/clientfeed"
-	"github.com/qredo/signing-agent/config"
 	"github.com/qredo/signing-agent/defs"
-	"github.com/qredo/signing-agent/hub"
 	"github.com/qredo/signing-agent/lib"
 	"github.com/qredo/signing-agent/util"
 )
 
-type mockFeedHub struct {
-	NextRun                bool
-	RunCalled              bool
-	RegisterClientCalled   bool
-	UnregisterClientCalled bool
-	StopCalled             bool
-	IsRunningCalled        bool
-	LastRegisteredClient   *hub.FeedClient
-	LastUnregisteredClient *hub.FeedClient
+type mockManager struct {
+	RegisterClientFeedCalled bool
+	StartCalled              bool
+	LastRequest              *http.Request
 }
 
-func (m *mockFeedHub) IsRunning() bool {
-	m.IsRunningCalled = true
-	return m.NextRun
+func (m *mockManager) RegisterClientFeed(_ http.ResponseWriter, r *http.Request) {
+	m.RegisterClientFeedCalled = true
+	m.LastRequest = r
 }
 
-func (m *mockFeedHub) Run() bool {
-	m.RunCalled = true
-	return m.NextRun
-}
-
-func (m *mockFeedHub) Stop() {
-	m.StopCalled = true
-}
-
-func (m *mockFeedHub) RegisterClient(client *hub.FeedClient) {
-	m.RegisterClientCalled = true
-	m.LastRegisteredClient = client
-}
-
-func (m *mockFeedHub) UnregisterClient(client *hub.FeedClient) {
-	m.UnregisterClientCalled = true
-	m.LastUnregisteredClient = client
-}
-
-func (m *mockFeedHub) GetExternalFeedClients() int {
-	return 0
-}
-
-type mockClientFeed struct {
-	StartCalled         bool
-	ListenCalled        bool
-	GetFeedClientCalled bool
-	NextFeedClient      *hub.FeedClient
-}
-
-func (m *mockClientFeed) Start(wg *sync.WaitGroup) {
+func (m *mockManager) Start() {
 	m.StartCalled = true
-	wg.Done()
 }
 
-func (m *mockClientFeed) Listen() {
-	m.ListenCalled = true
-}
-func (m *mockClientFeed) GetFeedClient() *hub.FeedClient {
-	m.GetFeedClientCalled = true
-	return m.NextFeedClient
+func (m *mockManager) Stop() {
 }
 
 var testLog = util.NewTestLogger()
@@ -115,8 +66,7 @@ func TestSigningAgentHandler_RegisterAgent_already_registered(t *testing.T) {
 	mock_core := &lib.MockSigningAgentClient{
 		NextAgentID: "some agent id",
 	}
-	handler := NewSigningAgentHandler(&mockFeedHub{}, mock_core, testLog, &config.Config{
-		HTTP: config.HttpSettings{}}, nil, nil, "")
+	handler := NewSigningAgentHandler(nil, mock_core, testLog, "")
 
 	rr := httptest.NewRecorder()
 
@@ -147,10 +97,9 @@ func TestSigningAgentHandler_RegisterAgent_fails_to_decode_request(t *testing.T)
 	}
 
 	handler := &SigningAgentHandler{
-		feedHub: &mockFeedHub{},
-		core:    mock_core,
-		log:     testLog,
-		decode:  decode,
+		core:   mock_core,
+		log:    testLog,
+		decode: decode,
 	}
 
 	req, _ := http.NewRequest("POST", "/path", nil)
@@ -177,8 +126,7 @@ func TestSigningAgentHandler_RegisterAgent_doesnt_validate_request(t *testing.T)
 	//Arrange
 	mock_core := lib.NewMockSigningAgentClient("")
 
-	handler := NewSigningAgentHandler(&mockFeedHub{}, mock_core, testLog, &config.Config{
-		HTTP: config.HttpSettings{}}, nil, nil, "")
+	handler := NewSigningAgentHandler(nil, mock_core, testLog, "")
 
 	req, _ := http.NewRequest("POST", "/path", bytes.NewReader([]byte(`
 	{
@@ -204,8 +152,7 @@ func TestSigningAgentHandler_RegisterAgent_fails_to_register_client(t *testing.T
 		NextRegisterError: errors.New("some error"),
 	}
 
-	handler := NewSigningAgentHandler(&mockFeedHub{}, mock_core, testLog, &config.Config{
-		HTTP: config.HttpSettings{}}, nil, nil, "")
+	handler := NewSigningAgentHandler(nil, mock_core, testLog, "")
 
 	//Act
 	response, err := handler.RegisterAgent(nil, httptest.NewRecorder(), NewTestRequest())
@@ -226,8 +173,7 @@ func TestSigningAgentHandler_RegisterAgent_fails_to_init_registration(t *testing
 		NextClientRegisterResponse: testClientRegisterResponse,
 	}
 
-	handler := NewSigningAgentHandler(&mockFeedHub{}, mock_core, testLog, &config.Config{
-		HTTP: config.HttpSettings{}}, nil, nil, "")
+	handler := NewSigningAgentHandler(nil, mock_core, testLog, "")
 
 	//Act
 	response, err := handler.RegisterAgent(nil, httptest.NewRecorder(), NewTestRequest())
@@ -253,8 +199,7 @@ func TestSigningAgentHandler_RegisterAgent_fails_to_finish_registration(t *testi
 		NextRegisterInitResponse:   testRegisterInitResponse,
 	}
 
-	handler := NewSigningAgentHandler(&mockFeedHub{}, mock_core, testLog, &config.Config{
-		HTTP: config.HttpSettings{}}, nil, nil, "")
+	handler := NewSigningAgentHandler(nil, mock_core, testLog, "")
 
 	//Act
 	response, err := handler.RegisterAgent(nil, httptest.NewRecorder(), NewTestRequest())
@@ -273,7 +218,7 @@ func TestSigningAgentHandler_RegisterAgent_fails_to_finish_registration(t *testi
 	assert.Equal(t, "iddocument", mock_core.LastRegisterFinishRequest.IDDocument)
 }
 
-func TestSigningAgentHandler_RegisterAgent_returns_response(t *testing.T) {
+func TestSigningAgentHandler_RegisterAgent_starts_manager(t *testing.T) {
 	//Arrange
 	mock_core := &lib.MockSigningAgentClient{
 		NextClientRegisterResponse: testClientRegisterResponse,
@@ -281,11 +226,8 @@ func TestSigningAgentHandler_RegisterAgent_returns_response(t *testing.T) {
 		NextRegisterFinishResponse: &api.ClientRegisterFinishResponse{},
 	}
 
-	handler := NewSigningAgentHandler(&mockFeedHub{}, mock_core, testLog, &config.Config{
-		HTTP: config.HttpSettings{
-			Addr: "some address",
-		}}, nil, nil, "ws://some address/api/v1/client/feed")
-
+	mockManager := &mockManager{}
+	handler := NewSigningAgentHandler(mockManager, mock_core, testLog, "ws://some address/api/v1/client/feed")
 	//Act
 	response, err := handler.RegisterAgent(nil, httptest.NewRecorder(), NewTestRequest())
 
@@ -294,6 +236,8 @@ func TestSigningAgentHandler_RegisterAgent_returns_response(t *testing.T) {
 	assert.NotNil(t, response)
 	assert.True(t, mock_core.ClientRegisterFinishCalled)
 
+	assert.True(t, mockManager.StartCalled)
+
 	res, ok := response.(api.AgentRegisterResponse)
 	assert.True(t, ok)
 	assert.NotNil(t, res)
@@ -301,175 +245,24 @@ func TestSigningAgentHandler_RegisterAgent_returns_response(t *testing.T) {
 	assert.Equal(t, "ws://some address/api/v1/client/feed", res.FeedURL)
 }
 
-func TestSigningAgentHandler_StartAgent_runs_feedHub(t *testing.T) {
-	//Arrange
-	defer goleak.VerifyNone(t)
-	mockFeedHub := &mockFeedHub{}
-	mockCore := lib.NewMockSigningAgentClient("valid_agentID")
-	handler := NewSigningAgentHandler(mockFeedHub, mockCore, testLog,
-		&config.Config{
-			HTTP: config.HttpSettings{}}, nil, nil, "")
-
-	//Act
-	handler.StartAgent()
-
-	//Assert
-	assert.True(t, mockFeedHub.RunCalled)
-	assert.True(t, mockCore.GetSystemAgentIDCalled)
-	assert.False(t, mockFeedHub.RegisterClientCalled)
-}
-
-func TestSigningAgentHandler_StartAgent_doesnt_start_autoApproval(t *testing.T) {
-	//Arrange
-	defer goleak.VerifyNone(t)
-	mockFeedHub := &mockFeedHub{
-		NextRun: true,
-	}
-	mockCore := lib.NewMockSigningAgentClient("valid_agentID")
-	config := &config.Config{
-		HTTP:        config.HttpSettings{},
-		AutoApprove: config.AutoApprove{},
-	}
-	handler := NewSigningAgentHandler(mockFeedHub, mockCore, testLog, config, nil, nil, "")
-
-	//Act
-	handler.StartAgent()
-
-	//Assert
-	assert.True(t, mockFeedHub.RunCalled)
-	assert.True(t, mockCore.GetSystemAgentIDCalled)
-	assert.False(t, mockFeedHub.RegisterClientCalled)
-}
-
-func TestSigningAgentHandler_StartAgent_registers_auto_approval(t *testing.T) {
-	//Arrange
-	defer goleak.VerifyNone(t)
-	mockFeedHub := &mockFeedHub{
-		NextRun: true,
-	}
-	mockCore := lib.NewMockSigningAgentClient("valid_agentID")
-
-	handler := NewSigningAgentHandler(mockFeedHub, mockCore, testLog, &config.Config{
-		AutoApprove: config.AutoApprove{
-			Enabled: true,
-		},
-	}, autoapprover.NewAutoApprover(mockCore, testLog, &config.Config{}, nil), nil, "")
-
-	//Act
-	handler.StartAgent()
-
-	//Assert
-	assert.True(t, mockFeedHub.RunCalled)
-	assert.True(t, mockCore.GetSystemAgentIDCalled)
-	assert.True(t, mockFeedHub.RegisterClientCalled)
-
-	auto_approver := mockFeedHub.LastRegisteredClient
-	assert.NotNil(t, auto_approver)
-	assert.True(t, auto_approver.IsInternal)
-	close(auto_approver.Feed)
-}
-
-func TestSigningAgentHandler_StopAgent(t *testing.T) {
-	//Arrange
-	mockFeedHub := &mockFeedHub{}
-	handler := NewSigningAgentHandler(mockFeedHub, nil, util.NewTestLogger(), &config.Config{
-		HTTP: config.HttpSettings{}}, &autoapprover.AutoApprover{}, nil, "")
-
-	//Act
-	handler.StopAgent()
-
-	//Assert
-	assert.True(t, mockFeedHub.StopCalled)
-}
-
-func TestSigningAgentHandler_ClientFeed_hub_not_running(t *testing.T) {
-	//Arrange
-	mockHub := &mockFeedHub{}
-	handler := &SigningAgentHandler{
-		feedHub: mockHub,
-		log:     testLog,
-	}
-
-	test_req, _ := http.NewRequest("GET", "/path", nil)
-
-	//Act
-	response, err := handler.ClientFeed(nil, httptest.NewRecorder(), test_req)
-
-	//Assert
-	assert.Nil(t, response)
-	assert.Nil(t, err)
-	assert.False(t, mockHub.RegisterClientCalled)
-}
-
-func TestSigningAgentHandler_ClientFeed_upgrade_fails(t *testing.T) {
-	//Arrange
-	mockHub := &mockFeedHub{
-		NextRun: true,
-	}
-	mockUpgrader := &hub.MockWebsocketUpgrader{
-		NextError: errors.New("some error"),
-	}
-	handler := &SigningAgentHandler{
-		feedHub:  mockHub,
-		log:      testLog,
-		upgrader: mockUpgrader,
-	}
-
-	test_req, _ := http.NewRequest("GET", "/path", nil)
-	w := httptest.NewRecorder()
-
-	//Act
-	response, err := handler.ClientFeed(nil, w, test_req)
-
-	//Assert
-	assert.Nil(t, response)
-	assert.Nil(t, err)
-	assert.False(t, mockHub.RegisterClientCalled)
-	assert.True(t, mockUpgrader.UpgradeCalled)
-	assert.Equal(t, test_req, mockUpgrader.LastRequest)
-	assert.Equal(t, w, mockUpgrader.LastWriter)
-	assert.Nil(t, mockUpgrader.LastResponseHeader)
-}
-
 func TestSigningAgentHandler_ClientFeed_registers_client(t *testing.T) {
 	//Arrange
-	defer goleak.VerifyNone(t)
-	mockHub := &mockFeedHub{
-		NextRun: true,
-	}
-	mockConn := &hub.MockWebsocketConnection{}
-	mockUpgrader := &hub.MockWebsocketUpgrader{
-		NextWebsocketConnection: mockConn,
-	}
-	feedClient := hub.NewFeedClient(true)
-	mockFeedClient := &mockClientFeed{
-		NextFeedClient: &feedClient,
-	}
-	newClientfunc := func(conn hub.WebsocketConnection, log *zap.SugaredLogger, unregister clientfeed.UnregisterFunc, config *config.WebSocketConfig) clientfeed.ClientFeed {
-		return mockFeedClient
-	}
+	mockManager := &mockManager{}
 	handler := &SigningAgentHandler{
-		feedHub:           mockHub,
-		log:               testLog,
-		upgrader:          mockUpgrader,
-		websocketConfig:   &config.WebSocketConfig{},
-		newClientFeedFunc: newClientfunc,
+		agentManager: mockManager,
 	}
 
 	test_req, _ := http.NewRequest("GET", "/path", nil)
 
 	//Act
-	_, _ = handler.ClientFeed(nil, httptest.NewRecorder(), test_req)
-	<-time.After(time.Second)
+	res, err := handler.ClientFeed(nil, httptest.NewRecorder(), test_req)
 
 	//Assert
-	assert.True(t, mockHub.RegisterClientCalled)
-	assert.NotNil(t, mockHub.LastRegisteredClient)
-	assert.Equal(t, &feedClient, mockHub.LastRegisteredClient)
+	assert.Nil(t, res)
+	assert.Nil(t, err)
 
-	assert.True(t, mockFeedClient.StartCalled)
-	assert.True(t, mockFeedClient.GetFeedClientCalled)
-	assert.True(t, mockFeedClient.ListenCalled)
+	assert.True(t, mockManager.RegisterClientFeedCalled)
+	assert.Equal(t, test_req, mockManager.LastRequest)
 }
 
 func TestSigningAgentHandler_GetClient(t *testing.T) {

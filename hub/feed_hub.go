@@ -143,13 +143,7 @@ func (w *feedHubImpl) startHub(wg *sync.WaitGroup) {
 			w.lock.Lock()
 			w.log.Infof("FeedHub: message received [%v]", string(message))
 			for client := range w.clients {
-				select {
-				case client.Feed <- message:
-				default:
-					w.log.Debugf("FeedHub: client not listening, removing client")
-					close(client.Feed)
-					delete(w.clients, client)
-				}
+				client.Feed <- message
 			}
 			w.lock.Unlock()
 		}
