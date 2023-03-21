@@ -2,6 +2,7 @@ package hub
 
 import (
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -97,4 +98,42 @@ func (m *MockWebsocketConnection) SetWriteDeadline(t time.Time) error {
 	m.SetWriteDeadlineCalled = true
 
 	return m.NextError
+}
+
+type mockSourceConnection struct {
+	ConnectCalled       bool
+	ListenCalled        bool
+	DisconnectCalled    bool
+	GetReadyStateCalled bool
+	NextConnect         bool
+	NextReadyState      string
+	RxMessages          chan []byte
+}
+
+func (m *mockSourceConnection) Connect() bool {
+	m.ConnectCalled = true
+	return m.NextConnect
+}
+
+func (m *mockSourceConnection) Disconnect() {
+	m.DisconnectCalled = true
+
+}
+
+func (m *mockSourceConnection) Listen(wg *sync.WaitGroup) {
+	m.ListenCalled = true
+	wg.Done()
+}
+
+func (m *mockSourceConnection) GetFeedUrl() string {
+	return ""
+}
+
+func (m *mockSourceConnection) GetReadyState() string {
+	m.GetReadyStateCalled = true
+	return m.NextReadyState
+}
+
+func (m *mockSourceConnection) GetSendChannel() chan []byte {
+	return m.RxMessages
 }

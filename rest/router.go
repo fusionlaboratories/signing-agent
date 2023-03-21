@@ -20,6 +20,7 @@ import (
 	"github.com/qredo/signing-agent/defs"
 	"github.com/qredo/signing-agent/hub"
 	"github.com/qredo/signing-agent/lib"
+	"github.com/qredo/signing-agent/lib/clients"
 	rest_handlers "github.com/qredo/signing-agent/rest/handlers"
 	"github.com/qredo/signing-agent/rest/version"
 	"github.com/qredo/signing-agent/util"
@@ -44,6 +45,7 @@ type Router struct {
 	version             *version.Version
 	signingAgentHandler *rest_handlers.SigningAgentHandler
 	healthCheckHandler  *rest_handlers.HealthCheckHandler
+	clientsMng          clients.ServiceMng
 }
 
 func NewQRouter(log *zap.SugaredLogger, config *config.Config, version *version.Version) (*Router, error) {
@@ -69,12 +71,10 @@ func NewQRouter(log *zap.SugaredLogger, config *config.Config, version *version.
 	feedHub := hub.NewFeedHub(serverConn, log)
 
 	localFeed := fmt.Sprintf("ws://%s%s/client/feed", config.HTTP.Addr, defs.PathPrefix)
-
 	syncronizer := newActionSyncronizer(&config.LoadBalancing)
-	autoApprover := autoapprover.NewAutoApprover(core, log, config, syncronizer)
-	upgrader := hub.NewDefaultUpgrader(config.Websocket.ReadBufferSize, config.Websocket.WriteBufferSize)
+	clientsManager := clients.NewManager(core, feedHub, log, config, hub.NewDefaultUpgrader(config.Websocket.ReadBufferSize, config.Websocket.WriteBufferSize), syncronizer)
 
-	signingAgentHandler := rest_handlers.NewSigningAgentHandler(feedHub, core, log, config, autoApprover, upgrader, localFeed)
+	signingAgentHandler := rest_handlers.NewSigningAgentHandler(clientsManager, core, log, localFeed)
 	healthCheckHandler := rest_handlers.NewHealthCheckHandler(serverConn, version, config, feedHub, localFeed)
 	actionHandler := rest_handlers.NewActionHandler(autoapprover.NewActionManager(core, syncronizer, log, config.LoadBalancing.Enable))
 
@@ -86,6 +86,7 @@ func NewQRouter(log *zap.SugaredLogger, config *config.Config, version *version.
 		signingAgentHandler: signingAgentHandler,
 		healthCheckHandler:  healthCheckHandler,
 		actionHandler:       actionHandler,
+		clientsMng:          clientsManager,
 	}
 
 	rt.router = rt.SetHandlers()
@@ -139,7 +140,7 @@ func (r *Router) StartHTTPListener(errChan chan error) {
 	r.log.Infof("CORS policy: %s", strings.Join(r.config.HTTP.CORSAllowOrigins, ","))
 	r.log.Infof("Starting listener on %v", r.config.HTTP.Addr)
 
-	r.signingAgentHandler.StartAgent()
+	r.clientsMng.Start()
 
 	if r.config.HTTP.TLS.Enabled {
 		r.log.Info("Start listening on HTTPS")
@@ -189,9 +190,9 @@ func FormatJSONResp(w http.ResponseWriter, r *http.Request, v interface{}, err e
 	}
 }
 
-// Stop closes the signing agent
+// Stop shuts down the Signing Agent service
 func (r *Router) Stop() {
-	r.signingAgentHandler.StopAgent()
+	r.clientsMng.Stop()
 }
 
 func (r *Router) setupCORS(h http.Handler) http.Handler {

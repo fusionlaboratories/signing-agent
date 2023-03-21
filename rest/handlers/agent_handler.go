@@ -2,79 +2,35 @@ package handlers
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/jinzhu/copier"
 	"go.uber.org/zap"
 
 	"github.com/qredo/signing-agent/api"
-	"github.com/qredo/signing-agent/autoapprover"
-	"github.com/qredo/signing-agent/clientfeed"
-	"github.com/qredo/signing-agent/config"
 	"github.com/qredo/signing-agent/defs"
-	"github.com/qredo/signing-agent/hub"
 	"github.com/qredo/signing-agent/lib"
+	"github.com/qredo/signing-agent/lib/clients"
 	"github.com/qredo/signing-agent/util"
 )
 
-type newClientFeedFunc func(conn hub.WebsocketConnection, log *zap.SugaredLogger, unregister clientfeed.UnregisterFunc, config *config.WebSocketConfig) clientfeed.ClientFeed
-
 type SigningAgentHandler struct {
-	feedHub           hub.FeedHub
-	log               *zap.SugaredLogger
-	core              lib.SigningAgentClient
-	config            *config.AutoApprove
-	websocketConfig   *config.WebSocketConfig
-	localFeed         string
-	decode            func(interface{}, *http.Request) error
-	autoApprover      *autoapprover.AutoApprover
-	upgrader          hub.WebsocketUpgrader
-	newClientFeedFunc newClientFeedFunc //function used by the feed clients to unregister themselves from the hub and stop receiving data
+	log  *zap.SugaredLogger
+	core lib.SigningAgentClient
+
+	localFeed    string
+	decode       func(interface{}, *http.Request) error
+	agentManager clients.AgentMng
 }
 
 // NewSigningAgentHandler instantiates and returns a new SigningAgentHandler object.
-func NewSigningAgentHandler(feedHub hub.FeedHub, core lib.SigningAgentClient, log *zap.SugaredLogger, config *config.Config, autoApprover *autoapprover.AutoApprover, upgrader hub.WebsocketUpgrader, localFeed string) *SigningAgentHandler {
+func NewSigningAgentHandler(agentManager clients.AgentMng, core lib.SigningAgentClient, log *zap.SugaredLogger, localFeed string) *SigningAgentHandler {
 	return &SigningAgentHandler{
-		feedHub:           feedHub,
-		log:               log,
-		core:              core,
-		config:            &config.AutoApprove,
-		localFeed:         localFeed,
-		decode:            util.DecodeRequest,
-		autoApprover:      autoApprover,
-		upgrader:          upgrader,
-		websocketConfig:   &config.Websocket,
-		newClientFeedFunc: clientfeed.NewClientFeed,
+		agentManager: agentManager,
+		log:          log,
+		core:         core,
+		localFeed:    localFeed,
+		decode:       util.DecodeRequest,
 	}
-}
-
-// StartAgent is running the feed hub if the agent is registered.
-// It also makes sure the auto approver is registered to the hub and is listening for incoming actions, if enabled in the config
-func (h *SigningAgentHandler) StartAgent() {
-	agentID := h.core.GetSystemAgentID()
-	if len(agentID) == 0 {
-		h.log.Info("Agent is not yet configured, auto-approval not started")
-		return
-	}
-
-	if !h.feedHub.Run() {
-		h.log.Error("failed to start the feed hub")
-		return
-	}
-
-	if !h.config.Enabled {
-		h.log.Debug("Auto-approval feature not enabled in config")
-		return
-	}
-
-	h.feedHub.RegisterClient(&h.autoApprover.FeedClient)
-	go h.autoApprover.Listen()
-}
-
-// StopAgent is called to stop the feed hub on request, by ex: when the service is stopped
-func (h *SigningAgentHandler) StopAgent() {
-	h.feedHub.Stop()
-	h.log.Info("feed hub stopped")
 }
 
 // RegisterAgent
@@ -105,7 +61,7 @@ func (h *SigningAgentHandler) RegisterAgent(_ *defs.RequestContext, w http.Respo
 	if response, err := h.register(r); err != nil {
 		return nil, err
 	} else {
-		h.StartAgent()
+		h.agentManager.Start()
 		return response, nil
 	}
 }
@@ -126,25 +82,7 @@ func (h *SigningAgentHandler) RegisterAgent(_ *defs.RequestContext, w http.Respo
 // Responses:
 // 200: ClientFeedResponse
 func (h *SigningAgentHandler) ClientFeed(_ *defs.RequestContext, w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	hubRunning := h.feedHub.IsRunning()
-
-	if hubRunning {
-		clientFeed := h.newClientFeed(w, r)
-		if clientFeed != nil {
-			var wg sync.WaitGroup
-			wg.Add(1)
-
-			go clientFeed.Start(&wg)
-			wg.Wait() //wait for the client to set up the conn handling
-
-			h.feedHub.RegisterClient(clientFeed.GetFeedClient())
-			go clientFeed.Listen()
-			h.log.Info("handler: connected to feed, listening ...")
-		}
-	} else {
-		h.log.Debugf("handler: failed to connect, hub not running")
-	}
-
+	h.agentManager.RegisterClientFeed(w, r)
 	return nil, nil
 }
 
@@ -172,16 +110,6 @@ func (h *SigningAgentHandler) GetClient(_ *defs.RequestContext, w http.ResponseW
 	}
 
 	return response, nil
-}
-
-func (h *SigningAgentHandler) newClientFeed(w http.ResponseWriter, r *http.Request) clientfeed.ClientFeed {
-	conn, err := h.upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		h.log.Errorf("handler: failed to upgrade connection, err: %v", err)
-		return nil
-	}
-
-	return h.newClientFeedFunc(conn, h.log, h.feedHub.UnregisterClient, h.websocketConfig)
 }
 
 func (h *SigningAgentHandler) register(r *http.Request) (interface{}, error) {

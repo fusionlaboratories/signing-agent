@@ -14,16 +14,16 @@ type HealthCheckHandler struct {
 	version      *version.Version
 	config       *config.Config
 	source       hub.SourceStats
-	feedClients  hub.ConnectedClients
+	connClients  hub.ConnectedClients
 	localFeedUrl string
 }
 
-func NewHealthCheckHandler(source hub.SourceStats, version *version.Version, config *config.Config, feedHub hub.ConnectedClients, localFeed string) *HealthCheckHandler {
+func NewHealthCheckHandler(source hub.SourceStats, version *version.Version, config *config.Config, connClients hub.ConnectedClients, localFeed string) *HealthCheckHandler {
 	return &HealthCheckHandler{
 		source:       source,
 		version:      version,
 		config:       config,
-		feedClients:  feedHub,
+		connClients:  connClients,
 		localFeedUrl: localFeed,
 	}
 }
@@ -81,7 +81,7 @@ func (h *HealthCheckHandler) HealthCheckConfig(_ *defs.RequestContext, w http.Re
 func (h *HealthCheckHandler) HealthCheckStatus(_ *defs.RequestContext, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	readyState := h.source.GetReadyState()
 	sourceFeedUrl := h.source.GetFeedUrl()
-	connectedFeedClients := h.feedClients.GetExternalFeedClients()
+	connectedFeedClients := h.connClients.GetExternalFeedClients()
 
 	response := api.HealthCheckStatusResponse{
 		WebsocketStatus: api.NewWebsocketStatus(readyState, sourceFeedUrl, h.localFeedUrl, connectedFeedClients),

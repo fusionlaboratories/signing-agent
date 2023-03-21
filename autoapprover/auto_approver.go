@@ -39,15 +39,17 @@ func NewAutoApprover(core lib.SigningAgentClient, log *zap.SugaredLogger, config
 }
 
 // Listen is constantly listening for messages on the Feed channel.
-// The Feed channel is always closed by the sender. Then this happens, the AutoApprover stops
+// The Feed channel is always closed by the sender. When this happens, the AutoApprover stops
 func (a *AutoApprover) Listen() {
+	a.log.Info("AutoApproval: listening")
+
 	for {
 		if message, ok := <-a.Feed; !ok {
 			//channel was closed by the sender
 			a.log.Info("AutoApproval: stopped")
 			return
 		} else {
-			a.handleMessage(message)
+			go a.handleMessage(message)
 		}
 	}
 }
@@ -57,7 +59,7 @@ func (a *AutoApprover) handleMessage(message []byte) {
 	if err := json.Unmarshal(message, &action); err == nil {
 		if action.IsNotExpired() {
 			if a.shouldHandleAction(action.ID) {
-				go a.handleAction(&action)
+				a.handleAction(&action)
 			}
 		} else {
 			a.log.Infof("AutoApproval: action [%v] has expired", action.ID)
