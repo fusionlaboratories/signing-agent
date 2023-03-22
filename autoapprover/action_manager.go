@@ -31,27 +31,33 @@ func NewActionManager(core lib.SigningAgentClient, syncronizer ActionSyncronizer
 
 // Approve the action for the given actionID
 func (a *actionManage) Approve(actionID string) error {
-	if a.loadBalancingEnabled {
-		if !a.syncronizer.ShouldHandleAction(actionID) {
-			a.log.Debugf("action [%v] was already approved!", actionID)
-			return nil
-		}
-
-		if err := a.syncronizer.AcquireLock(); err != nil {
-			a.log.Errorf("%v action-id %v", err, actionID)
-			return err
-		}
-		defer func() {
-			if err := a.syncronizer.Release(actionID); err != nil {
-				a.log.Errorf("%v action-id %v", err, actionID)
-			}
-		}()
-	}
-
-	return a.core.ActionApprove(actionID)
+	a.log.Debugf("manually approving action `%s`", actionID)
+	return a.act(actionID, a.core.ActionApprove)
 }
 
 // Reject the action for the given actionID
 func (a *actionManage) Reject(actionID string) error {
-	return a.core.ActionReject(actionID)
+	a.log.Debugf("manually rejecting action `%s`", actionID)
+	return a.act(actionID, a.core.ActionReject)
+}
+
+func (a *actionManage) act(actionID string, actFunc func(string) error) error {
+	if a.loadBalancingEnabled {
+		if !a.syncronizer.ShouldHandleAction(actionID) {
+			a.log.Debugf("action [%s] was already handled!", actionID)
+			return nil
+		}
+
+		if err := a.syncronizer.AcquireLock(); err != nil {
+			a.log.Errorf("%v action-id %s", err, actionID)
+			return err
+		}
+		defer func() {
+			if err := a.syncronizer.Release(actionID); err != nil {
+				a.log.Errorf("%v action-id %s", err, actionID)
+			}
+		}()
+	}
+
+	return actFunc(actionID)
 }

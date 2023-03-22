@@ -6,6 +6,7 @@ package autoapprover
 
 import (
 	"encoding/json"
+	"sync"
 
 	"go.uber.org/zap"
 
@@ -40,8 +41,9 @@ func NewAutoApprover(core lib.SigningAgentClient, log *zap.SugaredLogger, config
 
 // Listen is constantly listening for messages on the Feed channel.
 // The Feed channel is always closed by the sender. When this happens, the AutoApprover stops
-func (a *AutoApprover) Listen() {
-	a.log.Info("AutoApproval: listening")
+func (a *AutoApprover) Listen(wg *sync.WaitGroup) {
+	a.log.Debug("AutoApproval: listening")
+	wg.Done()
 
 	for {
 		if message, ok := <-a.Feed; !ok {
@@ -52,6 +54,11 @@ func (a *AutoApprover) Listen() {
 			go a.handleMessage(message)
 		}
 	}
+}
+
+func (a *AutoApprover) Stop() {
+	a.log.Debug("AutoApproval: stopping")
+	close(a.Feed)
 }
 
 func (a *AutoApprover) handleMessage(message []byte) {
