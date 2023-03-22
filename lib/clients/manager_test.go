@@ -35,14 +35,38 @@ func TestClientsManager_Start_agent_not_registered_doesnt_run_hub(t *testing.T) 
 	assert.False(t, mockFeedHub.RegisterClientCalled)
 }
 
-func TestClientsManager_Start_doesnt_start_hub(t *testing.T) {
+func TestClientsManager_Start_autoapprover_not_enabled_hub_doesnt_run(t *testing.T) {
 	//Arrange
+	defer goleak.VerifyNone(t)
 	mockFeedHub := &mockFeedHub{
 		NextRun: false,
 	}
 	mockCore := lib.NewMockSigningAgentClient("agent id")
 	sut := NewManager(mockCore, mockFeedHub, testLog,
-		nil, nil, nil)
+		&config.Config{}, nil, nil)
+
+	//Act
+	sut.Start()
+
+	//Assert
+	assert.True(t, mockFeedHub.RunCalled)
+	assert.True(t, mockCore.GetSystemAgentIDCalled)
+	assert.False(t, mockFeedHub.RegisterClientCalled)
+}
+
+func TestClientsManager_Start_autoapprover_enabled_hub_doesnt_run(t *testing.T) {
+	//Arrange
+	defer goleak.VerifyNone(t)
+	mockFeedHub := &mockFeedHub{
+		NextRun: false,
+	}
+	mockCore := lib.NewMockSigningAgentClient("agent id")
+	sut := NewManager(mockCore, mockFeedHub, testLog,
+		&config.Config{
+			AutoApprove: config.AutoApprove{
+				Enabled: true,
+			},
+		}, nil, nil)
 
 	//Act
 	sut.Start()
@@ -55,14 +79,13 @@ func TestClientsManager_Start_doesnt_start_hub(t *testing.T) {
 
 func TestClientsManager_Start_run_hub_autoapprove_not_enabled(t *testing.T) {
 	//Arrange
+	defer goleak.VerifyNone(t)
 	mockFeedHub := &mockFeedHub{
 		NextRun: true,
 	}
 	mockCore := lib.NewMockSigningAgentClient("agent id")
 	sut := NewManager(mockCore, mockFeedHub, testLog,
-		&config.Config{
-			AutoApprove: config.AutoApprove{},
-		}, nil, nil)
+		&config.Config{}, nil, nil)
 
 	//Act
 	sut.Start()

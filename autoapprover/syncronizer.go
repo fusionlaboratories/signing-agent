@@ -43,7 +43,7 @@ func (a *syncronize) ShouldHandleAction(actionID string) bool {
 	return true
 }
 
-// AcquireLock locks the mutex set for the action to be approved
+// AcquireLock locks the mutex set for the action to be handled
 func (a *syncronize) AcquireLock() error {
 	if err := a.mutex.Lock(); err != nil {
 		time.Sleep(time.Duration(a.cfgLoadBalancing.OnLockErrorTimeOutMs) * time.Millisecond)
@@ -53,7 +53,7 @@ func (a *syncronize) AcquireLock() error {
 	return nil
 }
 
-// Release unlocks the mutex and sets the action id in the cache to signal it was already approved
+// Release unlocks the mutex and sets the action id in the cache to signal it was already handled
 func (a *syncronize) Release(actionID string) error {
 	_, err := a.mutex.Unlock()
 	a.cache.Set(rCtx, actionID, 1, time.Duration(a.cfgLoadBalancing.ActionIDExpirationSec)*time.Second)

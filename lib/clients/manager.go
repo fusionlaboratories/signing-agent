@@ -56,20 +56,20 @@ func (m *clientsManager) Start() {
 		return
 	}
 
+	autoApprover := m.newAutoApprover()
+
 	if !m.feedHub.Run() {
 		m.log.Error("failed to start the feed hub")
+		if autoApprover != nil {
+			autoApprover.Stop()
+		}
 		return
 	}
 
-	if !m.config.AutoApprove.Enabled {
-		m.log.Debug("Auto-approval feature not enabled in config")
-		return
+	//feed hub is running, register the autoApprover if enabled
+	if autoApprover != nil {
+		m.feedHub.RegisterClient(&autoApprover.FeedClient)
 	}
-
-	autoApprover := autoapprover.NewAutoApprover(m.core, m.log, m.config, m.syncronizer)
-
-	m.feedHub.RegisterClient(&autoApprover.FeedClient)
-	go autoApprover.Listen()
 }
 
 // Stop is called to stop the feed hub on request, by ex: when the service is stopped
@@ -97,6 +97,24 @@ func (m *clientsManager) RegisterClientFeed(w http.ResponseWriter, r *http.Reque
 	} else {
 		m.log.Debugf("handler: failed to connect, hub not running")
 	}
+}
+
+func (m *clientsManager) newAutoApprover() *autoapprover.AutoApprover {
+	if !m.config.AutoApprove.Enabled {
+		m.log.Debug("Auto-approval feature not enabled in config")
+		return nil
+	}
+
+	m.log.Debug("Auto-approval feature enabled")
+	autoApprover := autoapprover.NewAutoApprover(m.core, m.log, m.config, m.syncronizer)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go autoApprover.Listen(&wg)
+	wg.Wait()
+
+	return autoApprover
 }
 
 func (m *clientsManager) newClientFeed(w http.ResponseWriter, r *http.Request) clientfeed.ClientFeed {

@@ -70,7 +70,7 @@ func TestActionManage_Reject_returns_error(t *testing.T) {
 	coreMock := &lib.MockSigningAgentClient{
 		NextError: errors.New("some reject error"),
 	}
-	sut := NewActionManager(coreMock, nil, util.NewTestLogger(), true)
+	sut := NewActionManager(coreMock, nil, util.NewTestLogger(), false)
 
 	//Act
 	err := sut.Reject("some test action id")

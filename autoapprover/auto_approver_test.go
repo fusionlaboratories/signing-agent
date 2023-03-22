@@ -3,6 +3,7 @@ package autoapprover
 import (
 	"encoding/json"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -50,7 +51,10 @@ func TestAutoApprover_Listen_fails_to_unmarshal(t *testing.T) {
 		log:        util.NewTestLogger(),
 	}
 	defer close(sut.Feed)
-	go sut.Listen()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go sut.Listen(&wg)
+	wg.Wait()
 
 	//Act
 	sut.Feed <- []byte("")
