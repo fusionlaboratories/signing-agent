@@ -2,6 +2,7 @@ package clients
 
 import (
 	"sync"
+	"time"
 
 	"github.com/qredo/signing-agent/hub"
 )
@@ -54,11 +55,16 @@ type mockClientFeed struct {
 
 func (m *mockClientFeed) Start(wg *sync.WaitGroup) {
 	m.StartCalled = true
+	//add a bit of delay to ensure the sync
+	<-time.After(time.Second)
 	wg.Done()
 }
 
-func (m *mockClientFeed) Listen() {
+func (m *mockClientFeed) Listen(wg *sync.WaitGroup) {
 	m.ListenCalled = true
+	//add a bit of delay to ensure the sync
+	<-time.After(2 * time.Second)
+	wg.Done()
 }
 
 func (m *mockClientFeed) GetFeedClient() *hub.FeedClient {

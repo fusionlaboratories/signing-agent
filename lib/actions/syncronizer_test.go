@@ -1,4 +1,4 @@
-package autoapprover
+package actions
 
 import (
 	"context"
@@ -12,22 +12,6 @@ import (
 	"github.com/go-redsync/redsync/v4"
 	"github.com/stretchr/testify/assert"
 )
-
-type mutexMock struct {
-	LockCalled   bool
-	UnlockCalled bool
-	NextError    error
-	NextUnlock   bool
-}
-
-func (m *mutexMock) Lock() error {
-	m.LockCalled = true
-	return m.NextError
-}
-func (m *mutexMock) Unlock() (bool, error) {
-	m.UnlockCalled = true
-	return m.NextUnlock, m.NextError
-}
 
 func TestSyncronize_ShouldHandleAction_already_handled(t *testing.T) {
 	//Arrange

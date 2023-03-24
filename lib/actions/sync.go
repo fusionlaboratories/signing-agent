@@ -1,4 +1,4 @@
-package autoapprover
+package actions
 
 import (
 	"context"

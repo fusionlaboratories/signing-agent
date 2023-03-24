@@ -15,11 +15,12 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/qredo/signing-agent/autoapprover"
 	"github.com/qredo/signing-agent/config"
 	"github.com/qredo/signing-agent/defs"
 	"github.com/qredo/signing-agent/hub"
+	"github.com/qredo/signing-agent/hub/message"
 	"github.com/qredo/signing-agent/lib"
+	"github.com/qredo/signing-agent/lib/actions"
 	"github.com/qredo/signing-agent/lib/clients"
 	rest_handlers "github.com/qredo/signing-agent/rest/handlers"
 	"github.com/qredo/signing-agent/rest/version"
@@ -68,7 +69,12 @@ func NewQRouter(log *zap.SugaredLogger, config *config.Config, version *version.
 	}
 
 	serverConn := hub.NewWebsocketSource(hub.NewDefaultDialer(), genWSQredoCoreClientFeedURL(&config.Websocket), log, core, &config.Websocket)
-	feedHub := hub.NewFeedHub(serverConn, log)
+	var messageMng message.Cacher
+	if !config.AutoApprove.Enabled {
+		messageMng = message.NewCacher(config.LoadBalancing.Enable, log)
+	}
+
+	feedHub := hub.NewFeedHub(serverConn, log, messageMng)
 
 	localFeed := fmt.Sprintf("ws://%s%s/client/feed", config.HTTP.Addr, defs.PathPrefix)
 	syncronizer := newActionSyncronizer(&config.LoadBalancing)
@@ -76,7 +82,7 @@ func NewQRouter(log *zap.SugaredLogger, config *config.Config, version *version.
 
 	signingAgentHandler := rest_handlers.NewSigningAgentHandler(clientsManager, core, log, localFeed)
 	healthCheckHandler := rest_handlers.NewHealthCheckHandler(serverConn, version, config, feedHub, localFeed)
-	actionHandler := rest_handlers.NewActionHandler(autoapprover.NewActionManager(core, syncronizer, log, config.LoadBalancing.Enable))
+	actionHandler := rest_handlers.NewActionHandler(actions.NewActionManager(core, syncronizer, log, config.LoadBalancing.Enable, messageMng))
 
 	rt := &Router{
 		log:                 log,
@@ -225,7 +231,7 @@ func genWSQredoCoreClientFeedURL(config *config.WebSocketConfig) string {
 	return config.QredoWebsocket
 }
 
-func newActionSyncronizer(config *config.LoadBalancing) autoapprover.ActionSyncronizer {
+func newActionSyncronizer(config *config.LoadBalancing) actions.ActionSyncronizer {
 	rds := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", config.RedisConfig.Host, config.RedisConfig.Port),
 		Password: config.RedisConfig.Password,
@@ -234,5 +240,5 @@ func newActionSyncronizer(config *config.LoadBalancing) autoapprover.ActionSyncr
 	pool := goredis.NewPool(rds)
 	rs := redsync.New(pool)
 
-	return autoapprover.NewSyncronizer(config, rds, rs)
+	return actions.NewSyncronizer(config, rds, rs)
 }

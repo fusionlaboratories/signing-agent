@@ -21,7 +21,7 @@ type UnregisterFunc func(client *hub.FeedClient)
 // ClientFeed is a client recieving messages from a feeb hub it's registered to
 type ClientFeed interface {
 	Start(wg *sync.WaitGroup)
-	Listen()
+	Listen(wg *sync.WaitGroup)
 	GetFeedClient() *hub.FeedClient
 }
 
@@ -97,7 +97,8 @@ func (c *clientFeedImpl) Start(wg *sync.WaitGroup) {
 }
 
 // Listen is receiving data on the Feed channel and writes them to the opened websocket connection
-func (c *clientFeedImpl) Listen() {
+func (c *clientFeedImpl) Listen(wg *sync.WaitGroup) {
+	wg.Done()
 	for {
 		if message, ok := <-c.Feed; !ok {
 			c.log.Debug("ClientFeed: client feed channel was closed")

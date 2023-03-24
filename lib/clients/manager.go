@@ -9,6 +9,7 @@ import (
 	"github.com/qredo/signing-agent/config"
 	"github.com/qredo/signing-agent/hub"
 	"github.com/qredo/signing-agent/lib"
+	"github.com/qredo/signing-agent/lib/actions"
 	"go.uber.org/zap"
 )
 
@@ -22,7 +23,7 @@ type ServiceMng interface {
 	Stop()
 }
 
-func NewManager(core lib.SigningAgentClient, feedHub hub.FeedHub, log *zap.SugaredLogger, config *config.Config, upgrader hub.WebsocketUpgrader, syncronizer autoapprover.ActionSyncronizer) AgentMng {
+func NewManager(core lib.SigningAgentClient, feedHub hub.FeedHub, log *zap.SugaredLogger, config *config.Config, upgrader hub.WebsocketUpgrader, syncronizer actions.ActionSyncronizer) AgentMng {
 	return &clientsManager{
 		feedHub: feedHub,
 		core:    core,
@@ -44,7 +45,7 @@ type clientsManager struct {
 	config            *config.Config
 	upgrader          hub.WebsocketUpgrader
 	newClientFeedFunc newClientFeedFunc //function used by the feed clients to unregister themselves from the hub and stop receiving data
-	syncronizer       autoapprover.ActionSyncronizer
+	syncronizer       actions.ActionSyncronizer
 }
 
 // Start is running the feed hub if the agent is registered.
@@ -85,13 +86,14 @@ func (m *clientsManager) RegisterClientFeed(w http.ResponseWriter, r *http.Reque
 		clientFeed := m.newClientFeed(w, r)
 		if clientFeed != nil {
 			var wg sync.WaitGroup
-			wg.Add(1)
+			wg.Add(2)
 
 			go clientFeed.Start(&wg)
-			wg.Wait() //wait for the client to set up the conn handling
+			go clientFeed.Listen(&wg)
+
+			wg.Wait() //wait for the client to set up the conn handling and start listening
 
 			m.feedHub.RegisterClient(clientFeed.GetFeedClient())
-			go clientFeed.Listen()
 			m.log.Info("handler: connected to feed, listening ...")
 		}
 	} else {

@@ -11,8 +11,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/qredo/signing-agent/config"
+	"github.com/qredo/signing-agent/defs"
 	"github.com/qredo/signing-agent/hub"
 	"github.com/qredo/signing-agent/lib"
+	"github.com/qredo/signing-agent/lib/actions"
 )
 
 type AutoApprover struct {
@@ -20,7 +22,7 @@ type AutoApprover struct {
 	log                  *zap.SugaredLogger
 	cfgAutoApproval      *config.AutoApprove
 	core                 lib.SigningAgentClient
-	syncronizer          ActionSyncronizer
+	syncronizer          actions.ActionSyncronizer
 	lastError            error
 	loadBalancingEnabled bool
 }
@@ -28,7 +30,7 @@ type AutoApprover struct {
 // NewAutoApprover returns a new *AutoApprover instance initialized with the provided parameters
 // The AutoApprover has an internal FeedClient which means it will be stopped when the service stops
 // or the Feed channel is closed on the sender side
-func NewAutoApprover(core lib.SigningAgentClient, log *zap.SugaredLogger, config *config.Config, syncronizer ActionSyncronizer) *AutoApprover {
+func NewAutoApprover(core lib.SigningAgentClient, log *zap.SugaredLogger, config *config.Config, syncronizer actions.ActionSyncronizer) *AutoApprover {
 	return &AutoApprover{
 		FeedClient:           hub.NewFeedClient(true),
 		log:                  log,
@@ -62,9 +64,9 @@ func (a *AutoApprover) Stop() {
 }
 
 func (a *AutoApprover) handleMessage(message []byte) {
-	var action actionInfo
+	var action defs.ActionInfo
 	if err := json.Unmarshal(message, &action); err == nil {
-		if action.IsNotExpired() {
+		if !action.IsExpired() {
 			if a.shouldHandleAction(action.ID) {
 				a.handleAction(&action)
 			}
@@ -89,7 +91,7 @@ func (a *AutoApprover) shouldHandleAction(actionId string) bool {
 	return true
 }
 
-func (a *AutoApprover) handleAction(action *actionInfo) {
+func (a *AutoApprover) handleAction(action *defs.ActionInfo) {
 	if a.loadBalancingEnabled {
 		if err := a.syncronizer.AcquireLock(); err != nil {
 			a.log.Warnf("AutoApproval, mutex lock: %v action [%v]", err, action.ID)

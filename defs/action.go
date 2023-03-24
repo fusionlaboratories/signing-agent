@@ -1,10 +1,8 @@
-package autoapprover
+package defs
 
-import (
-	"time"
-)
+import "time"
 
-type actionInfo struct {
+type ActionInfo struct {
 	ID         string `json:"id"`
 	AgentID    string `json:"coreClientID"`
 	Type       string `json:"type"`
@@ -13,6 +11,6 @@ type actionInfo struct {
 	ExpireTime int64  `json:"expireTime"`
 }
 
-func (a *actionInfo) IsNotExpired() bool {
-	return a.ExpireTime > time.Now().Unix()
+func (a *ActionInfo) IsExpired() bool {
+	return a.ExpireTime <= time.Now().Unix()
 }

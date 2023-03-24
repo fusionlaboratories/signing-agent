@@ -74,8 +74,12 @@ func TestClientFeedImpl_Listen_writes_the_message(t *testing.T) {
 		FeedClient: hub.NewFeedClient(false),
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(1)
 	//Act
-	go sut.Listen()
+
+	go sut.Listen(&wg)
+	wg.Wait()
 	sut.Feed <- []byte("some message")
 	<-time.After(time.Second) //give it time to process the message
 
@@ -103,12 +107,12 @@ func TestClientFeedImpl_Listen_closes_connection(t *testing.T) {
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(2)
 	go sut.Start(&wg)
-	wg.Wait()
 
 	//Act
-	go sut.Listen()
+	go sut.Listen(&wg)
+	wg.Wait()
 	close(sut.Feed)
 	<-time.After(time.Second) //give it time to processs
 

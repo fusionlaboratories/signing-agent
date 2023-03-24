@@ -1,6 +1,7 @@
-package autoapprover
+package actions
 
 import (
+	"github.com/qredo/signing-agent/hub/message"
 	"github.com/qredo/signing-agent/lib"
 
 	"go.uber.org/zap"
@@ -17,15 +18,17 @@ type actionManage struct {
 	syncronizer          ActionSyncronizer
 	log                  *zap.SugaredLogger
 	loadBalancingEnabled bool
+	messageCache         message.CacheRemover
 }
 
 // NewActionManager return an ActionManager that's an instance of actionManage
-func NewActionManager(core lib.SigningAgentClient, syncronizer ActionSyncronizer, log *zap.SugaredLogger, loadBalancingEnabled bool) ActionManager {
+func NewActionManager(core lib.SigningAgentClient, syncronizer ActionSyncronizer, log *zap.SugaredLogger, loadBalancingEnabled bool, messageCache message.CacheRemover) ActionManager {
 	return &actionManage{
 		core:                 core,
 		syncronizer:          syncronizer,
 		log:                  log,
 		loadBalancingEnabled: loadBalancingEnabled,
+		messageCache:         messageCache,
 	}
 }
 
@@ -59,5 +62,13 @@ func (a *actionManage) act(actionID string, actFunc func(string) error) error {
 		}()
 	}
 
-	return actFunc(actionID)
+	if err := actFunc(actionID); err != nil {
+		return err
+	}
+
+	if a.messageCache != nil {
+		a.messageCache.RemoveMessage(actionID)
+	}
+
+	return nil
 }

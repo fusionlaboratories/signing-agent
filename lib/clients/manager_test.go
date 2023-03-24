@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/qredo/signing-agent/clientfeed"
 	"github.com/qredo/signing-agent/config"
@@ -204,7 +203,6 @@ func TestClientsManager_RegisterClientFeed_client_registered(t *testing.T) {
 
 	//Act
 	sut.RegisterClientFeed(w, test_req)
-	<-time.After(time.Second)
 
 	//Assert
 	assert.True(t, mockFeedHub.RegisterClientCalled)
