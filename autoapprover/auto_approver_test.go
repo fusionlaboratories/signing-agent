@@ -8,38 +8,15 @@ import (
 	"time"
 
 	"github.com/qredo/signing-agent/config"
+	"github.com/qredo/signing-agent/defs"
 	"github.com/qredo/signing-agent/hub"
 	"github.com/qredo/signing-agent/lib"
+	"github.com/qredo/signing-agent/lib/actions"
 	"github.com/qredo/signing-agent/util"
 
 	"github.com/test-go/testify/assert"
 	"go.uber.org/goleak"
 )
-
-type mockActionSyncronizer struct {
-	ShouldHandleActionCalled bool
-	AcquireLockCalled        bool
-	ReleaseCalled            bool
-	LastActionId             string
-	NextShouldHandle         bool
-	NextLockError            error
-	NextReleaseError         error
-}
-
-func (m *mockActionSyncronizer) ShouldHandleAction(actionID string) bool {
-	m.ShouldHandleActionCalled = true
-	m.LastActionId = actionID
-	return m.NextShouldHandle
-}
-func (m *mockActionSyncronizer) AcquireLock() error {
-	m.AcquireLockCalled = true
-	return m.NextLockError
-}
-func (m *mockActionSyncronizer) Release(actionID string) error {
-	m.ReleaseCalled = true
-	m.LastActionId = actionID
-	return m.NextReleaseError
-}
 
 func TestAutoApprover_Listen_fails_to_unmarshal(t *testing.T) {
 	//Arrange
@@ -72,7 +49,7 @@ func TestAutoApprover_handleMessage_action_expired(t *testing.T) {
 	sut := &AutoApprover{
 		log: util.NewTestLogger(),
 	}
-	bytes, _ := json.Marshal(actionInfo{
+	bytes, _ := json.Marshal(defs.ActionInfo{
 		ExpireTime: 12360,
 	})
 
@@ -85,10 +62,10 @@ func TestAutoApprover_handleMessage_action_expired(t *testing.T) {
 
 func TestAutoApprover_handleMessage_shouldnt_handle_action(t *testing.T) {
 	//Arrange
-	syncronizerMock := &mockActionSyncronizer{}
+	syncronizerMock := &actions.MockActionSyncronizer{}
 
 	sut := NewAutoApprover(nil, util.NewTestLogger(), &config.Config{LoadBalancing: config.LoadBalancing{Enable: true}}, syncronizerMock)
-	bytes, _ := json.Marshal(actionInfo{
+	bytes, _ := json.Marshal(defs.ActionInfo{
 		ID:         "actionid",
 		ExpireTime: time.Now().Add(time.Minute).Unix(),
 	})
@@ -104,13 +81,13 @@ func TestAutoApprover_handleMessage_shouldnt_handle_action(t *testing.T) {
 func TestAutoApprover_handleMessage_fails_to_lock(t *testing.T) {
 	//Arrange
 	defer goleak.VerifyNone(t)
-	syncronizerMock := &mockActionSyncronizer{
+	syncronizerMock := &actions.MockActionSyncronizer{
 		NextLockError:    errors.New("some lock error"),
 		NextShouldHandle: true,
 	}
 
 	sut := NewAutoApprover(nil, util.NewTestLogger(), &config.Config{LoadBalancing: config.LoadBalancing{Enable: true}}, syncronizerMock)
-	bytes, _ := json.Marshal(actionInfo{
+	bytes, _ := json.Marshal(defs.ActionInfo{
 		ID:         "actionid",
 		ExpireTime: time.Now().Add(time.Minute).Unix(),
 	})
@@ -127,12 +104,12 @@ func TestAutoApprover_handleMessage_fails_to_lock(t *testing.T) {
 func TestAutoApprover_handleAction_acquires_lock_and_approves(t *testing.T) {
 	//Arrange
 	defer goleak.VerifyNone(t)
-	syncronizerMock := &mockActionSyncronizer{
+	syncronizerMock := &actions.MockActionSyncronizer{
 		NextReleaseError: errors.New("some release error"),
 	}
 	coreMock := &lib.MockSigningAgentClient{}
 	sut := NewAutoApprover(coreMock, util.NewTestLogger(), &config.Config{LoadBalancing: config.LoadBalancing{Enable: true}}, syncronizerMock)
-	action := actionInfo{
+	action := defs.ActionInfo{
 		ID:         "actionid",
 		ExpireTime: time.Now().Add(time.Minute).Unix(),
 	}

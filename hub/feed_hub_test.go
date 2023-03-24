@@ -3,11 +3,13 @@ package hub
 import (
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
 
 	"github.com/qredo/signing-agent/defs"
+	"github.com/qredo/signing-agent/hub/message"
 	"github.com/qredo/signing-agent/util"
 )
 
@@ -15,7 +17,7 @@ func TestFeedHub_Run_fails_to_connect(t *testing.T) {
 	//Arrange
 	defer goleak.VerifyNone(t)
 	mockSourceConn := &mockSourceConnection{}
-	feedHub := NewFeedHub(mockSourceConn, util.NewTestLogger())
+	feedHub := NewFeedHub(mockSourceConn, util.NewTestLogger(), nil)
 
 	//Act
 	res := feedHub.Run()
@@ -33,7 +35,8 @@ func TestFeedHub_Run_connects_and_listens(t *testing.T) {
 		NextConnect: true,
 		RxMessages:  make(chan []byte, 1),
 	}
-	feedHub := NewFeedHub(mockSourceConn, util.NewTestLogger())
+	mockCache := &message.MockCache{}
+	feedHub := NewFeedHub(mockSourceConn, util.NewTestLogger(), mockCache)
 	client := &FeedClient{
 		Feed: make(chan []byte),
 	}
@@ -45,7 +48,7 @@ func TestFeedHub_Run_connects_and_listens(t *testing.T) {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	feedHub.RegisterClient(client)
+
 	go func() {
 		for {
 			msg := <-client.Feed
@@ -55,6 +58,7 @@ func TestFeedHub_Run_connects_and_listens(t *testing.T) {
 		}
 	}()
 
+	feedHub.RegisterClient(client)
 	go func() {
 		mockSourceConn.RxMessages <- []byte("test")
 	}()
@@ -68,6 +72,10 @@ func TestFeedHub_Run_connects_and_listens(t *testing.T) {
 	assert.True(t, feedHub.IsRunning())
 
 	assert.Equal(t, "test", receivedMessage)
+
+	assert.True(t, mockCache.AddMessageCalled)
+	assert.True(t, mockCache.GetMessagesCalled)
+	assert.Equal(t, "test", string(mockCache.LastMessage))
 	close(mockSourceConn.RxMessages)
 }
 
@@ -76,7 +84,7 @@ func TestFeedHub_Stop_not_connected(t *testing.T) {
 	mockSourceConn := &mockSourceConnection{
 		NextConnect: true,
 	}
-	feedHub := NewFeedHub(mockSourceConn, util.NewTestLogger())
+	feedHub := NewFeedHub(mockSourceConn, util.NewTestLogger(), nil)
 
 	//Act
 	feedHub.Stop()
@@ -92,7 +100,7 @@ func TestFeedHub_Stop_connected(t *testing.T) {
 		NextConnect:    true,
 		NextReadyState: defs.ConnectionState.Open,
 	}
-	feedHub := NewFeedHub(mockSourceConn, util.NewTestLogger())
+	feedHub := NewFeedHub(mockSourceConn, util.NewTestLogger(), nil)
 
 	//Act
 	feedHub.Stop()
@@ -100,6 +108,49 @@ func TestFeedHub_Stop_connected(t *testing.T) {
 	//Assert
 	assert.True(t, mockSourceConn.GetReadyStateCalled)
 	assert.True(t, mockSourceConn.DisconnectCalled)
+}
+
+func TestFeedHub_Register_sends_cached_messages_to_client(t *testing.T) {
+	//Arrange
+	defer goleak.VerifyNone(t)
+	mockCache := &message.MockCache{
+		NextMessages: [][]byte{
+			[]byte("message 1"),
+			[]byte("message 2"),
+		},
+	}
+	feedHub := &feedHubImpl{
+		clients:      make(map[*FeedClient]bool),
+		log:          util.NewTestLogger(),
+		messageCache: mockCache,
+	}
+
+	client := &FeedClient{
+		Feed: make(chan []byte),
+	}
+
+	receivedMessages := make([][]byte, 0)
+
+	go func() {
+		for {
+			if message, ok := <-client.Feed; ok {
+				receivedMessages = append(receivedMessages, message)
+			} else {
+				return
+			}
+		}
+	}()
+
+	//Act
+	feedHub.RegisterClient(client)
+	<-time.After(time.Second)
+
+	//Assert
+	assert.Equal(t, 2, len(receivedMessages))
+	assert.Contains(t, receivedMessages, []byte("message 1"))
+	assert.Contains(t, receivedMessages, []byte("message 2"))
+	assert.True(t, mockCache.GetMessagesCalled)
+	close(client.Feed)
 }
 
 func TestFeedHub_Register_Unregister_client(t *testing.T) {

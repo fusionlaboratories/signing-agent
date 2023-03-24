@@ -1,9 +1,10 @@
-package autoapprover
+package actions
 
 import (
 	"errors"
 	"testing"
 
+	"github.com/qredo/signing-agent/hub/message"
 	"github.com/qredo/signing-agent/lib"
 	"github.com/qredo/signing-agent/util"
 
@@ -12,11 +13,11 @@ import (
 
 func TestActionManage_Approve_shouldnt_handle_action(t *testing.T) {
 	//Arrange
-	syncronizerMock := &mockActionSyncronizer{
+	syncronizerMock := &MockActionSyncronizer{
 		NextShouldHandle: false,
 	}
 	coreMock := &lib.MockSigningAgentClient{}
-	sut := NewActionManager(coreMock, syncronizerMock, util.NewTestLogger(), true)
+	sut := NewActionManager(coreMock, syncronizerMock, util.NewTestLogger(), true, nil)
 
 	//Act
 	res := sut.Approve("some test action id")
@@ -30,12 +31,12 @@ func TestActionManage_Approve_shouldnt_handle_action(t *testing.T) {
 
 func TestActionManage_Approve_fails_to_acquire_lock(t *testing.T) {
 	//Arrange
-	syncronizerMock := &mockActionSyncronizer{
+	syncronizerMock := &MockActionSyncronizer{
 		NextShouldHandle: true,
 		NextLockError:    errors.New("some lock error"),
 	}
 	coreMock := &lib.MockSigningAgentClient{}
-	sut := NewActionManager(coreMock, syncronizerMock, util.NewTestLogger(), true)
+	sut := NewActionManager(coreMock, syncronizerMock, util.NewTestLogger(), true, nil)
 
 	//Act
 	res := sut.Approve("some test action id")
@@ -49,12 +50,12 @@ func TestActionManage_Approve_fails_to_acquire_lock(t *testing.T) {
 
 func TestActionManage_Approve_approves(t *testing.T) {
 	//Arrange
-	syncronizerMock := &mockActionSyncronizer{
+	syncronizerMock := &MockActionSyncronizer{
 		NextShouldHandle: true,
 		NextReleaseError: errors.New("some unlock error"),
 	}
 	coreMock := &lib.MockSigningAgentClient{}
-	sut := NewActionManager(coreMock, syncronizerMock, util.NewTestLogger(), true)
+	sut := NewActionManager(coreMock, syncronizerMock, util.NewTestLogger(), true, nil)
 
 	//Act
 	res := sut.Approve("some test action id")
@@ -65,12 +66,13 @@ func TestActionManage_Approve_approves(t *testing.T) {
 	assert.True(t, coreMock.ActionApproveCalled)
 }
 
-func TestActionManage_Reject_returns_error(t *testing.T) {
+func TestActionManage_Reject_returns_error_doesnt_remove_from_cache(t *testing.T) {
 	//Arrange
 	coreMock := &lib.MockSigningAgentClient{
 		NextError: errors.New("some reject error"),
 	}
-	sut := NewActionManager(coreMock, nil, util.NewTestLogger(), false)
+	cacheMock := &message.MockCache{}
+	sut := NewActionManager(coreMock, nil, util.NewTestLogger(), false, cacheMock)
 
 	//Act
 	err := sut.Reject("some test action id")
@@ -80,4 +82,22 @@ func TestActionManage_Reject_returns_error(t *testing.T) {
 	assert.Equal(t, "some reject error", err.Error())
 	assert.True(t, coreMock.ActionRejectCalled)
 	assert.Equal(t, "some test action id", coreMock.LastRejectActionId)
+	assert.False(t, cacheMock.RemoveMessageCalled)
+}
+
+func TestActionManage_Reject_rejects_removes_from_cache(t *testing.T) {
+	//Arrange
+	coreMock := &lib.MockSigningAgentClient{}
+	cacheMock := &message.MockCache{}
+	sut := NewActionManager(coreMock, nil, util.NewTestLogger(), false, cacheMock)
+
+	//Act
+	err := sut.Reject("some test action id")
+
+	//Assert
+	assert.Nil(t, err)
+	assert.True(t, coreMock.ActionRejectCalled)
+	assert.Equal(t, "some test action id", coreMock.LastRejectActionId)
+	assert.True(t, cacheMock.RemoveMessageCalled)
+	assert.Equal(t, "some test action id", cacheMock.LastID)
 }

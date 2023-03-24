@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/qredo/signing-agent/defs"
+	"github.com/qredo/signing-agent/hub/message"
 )
 
 // FeedHub maintains the set of active clients
@@ -35,17 +36,20 @@ type feedHubImpl struct {
 	log        *zap.SugaredLogger
 	lock       sync.RWMutex
 	isRunning  bool
+
+	messageCache message.Cache
 }
 
 // NewFeedHub returns a FeedHub object that's an instance of FeedHubImpl
-func NewFeedHub(source Source, log *zap.SugaredLogger) FeedHub {
+func NewFeedHub(source Source, log *zap.SugaredLogger, messageCache message.Cache) FeedHub {
 	return &feedHubImpl{
-		source:     source,
-		log:        log,
-		clients:    make(map[*FeedClient]bool),
-		register:   make(chan *FeedClient),
-		unregister: make(chan *FeedClient),
-		lock:       sync.RWMutex{},
+		source:       source,
+		log:          log,
+		clients:      make(map[*FeedClient]bool),
+		register:     make(chan *FeedClient),
+		unregister:   make(chan *FeedClient),
+		lock:         sync.RWMutex{},
+		messageCache: messageCache,
 	}
 }
 
@@ -83,6 +87,14 @@ func (w *feedHubImpl) Stop() {
 func (w *feedHubImpl) RegisterClient(client *FeedClient) {
 	w.lock.Lock()
 	defer w.lock.Unlock()
+
+	//send all previously received pending messages
+	if w.messageCache != nil {
+		messages := w.messageCache.GetMessages()
+		for _, message := range messages {
+			client.Feed <- message
+		}
+	}
 
 	w.clients[client] = true
 	w.log.Info("FeedHub: new client registered")
@@ -142,6 +154,12 @@ func (w *feedHubImpl) startHub(wg *sync.WaitGroup) {
 		} else {
 			w.lock.Lock()
 			w.log.Infof("FeedHub: message received [%v]", string(message))
+
+			if w.messageCache != nil {
+				w.messageCache.AddMessage(message)
+			}
+
+			//send the message to all connected clients
 			for client := range w.clients {
 				client.Feed <- message
 			}

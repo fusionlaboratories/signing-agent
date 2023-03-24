@@ -5,17 +5,17 @@ import (
 	"strings"
 
 	"github.com/qredo/signing-agent/api"
-	"github.com/qredo/signing-agent/autoapprover"
 	"github.com/qredo/signing-agent/defs"
+	"github.com/qredo/signing-agent/lib/actions"
 
 	"github.com/gorilla/mux"
 )
 
 type ActionHandler struct {
-	actionManager autoapprover.ActionManager
+	actionManager actions.ActionManager
 }
 
-func NewActionHandler(actionManager autoapprover.ActionManager) *ActionHandler {
+func NewActionHandler(actionManager actions.ActionManager) *ActionHandler {
 	return &ActionHandler{
 		actionManager: actionManager,
 	}
