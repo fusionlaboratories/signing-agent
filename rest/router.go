@@ -68,16 +68,24 @@ func NewQRouter(log *zap.SugaredLogger, config *config.Config, version *version.
 		return nil, errors.Wrap(err, "failed to initialise core")
 	}
 
+	rds := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", config.LoadBalancing.RedisConfig.Host, config.LoadBalancing.RedisConfig.Port),
+		Password: config.LoadBalancing.RedisConfig.Password,
+		DB:       config.LoadBalancing.RedisConfig.DB,
+	})
+	pool := goredis.NewPool(rds)
+	rs := redsync.New(pool)
+
 	serverConn := hub.NewWebsocketSource(hub.NewDefaultDialer(), genWSQredoCoreClientFeedURL(&config.Websocket), log, core, &config.Websocket)
 	var messageMng message.Cacher
 	if !config.AutoApprove.Enabled {
-		messageMng = message.NewCacher(config.LoadBalancing.Enable, log)
+		messageMng = message.NewCacher(config.LoadBalancing.Enable, log, rds)
 	}
 
 	feedHub := hub.NewFeedHub(serverConn, log, messageMng)
 
 	localFeed := fmt.Sprintf("ws://%s%s/client/feed", config.HTTP.Addr, defs.PathPrefix)
-	syncronizer := newActionSyncronizer(&config.LoadBalancing)
+	syncronizer := actions.NewSyncronizer(&config.LoadBalancing, rds, rs)
 	clientsManager := clients.NewManager(core, feedHub, log, config, hub.NewDefaultUpgrader(config.Websocket.ReadBufferSize, config.Websocket.WriteBufferSize), syncronizer)
 
 	signingAgentHandler := rest_handlers.NewSigningAgentHandler(clientsManager, core, log, localFeed)
@@ -229,16 +237,4 @@ func (r *Router) printRoutes(router *mux.Router) {
 // genWSQredoCoreClientFeedURL assembles and returns the Qredo WS client feed URL as a string.
 func genWSQredoCoreClientFeedURL(config *config.WebSocketConfig) string {
 	return config.QredoWebsocket
-}
-
-func newActionSyncronizer(config *config.LoadBalancing) actions.ActionSyncronizer {
-	rds := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", config.RedisConfig.Host, config.RedisConfig.Port),
-		Password: config.RedisConfig.Password,
-		DB:       config.RedisConfig.DB,
-	})
-	pool := goredis.NewPool(rds)
-	rs := redsync.New(pool)
-
-	return actions.NewSyncronizer(config, rds, rs)
 }

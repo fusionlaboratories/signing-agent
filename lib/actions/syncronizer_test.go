@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/qredo/signing-agent/config"
+	"github.com/qredo/signing-agent/lib/store"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/go-redsync/redsync/v4"
@@ -15,7 +16,7 @@ import (
 
 func TestSyncronize_ShouldHandleAction_already_handled(t *testing.T) {
 	//Arrange
-	cacheMock := &mockCache{
+	cacheMock := &store.KVStoreMock{
 		NextStringCmd: redis.NewStringCmd(context.Background()),
 	}
 	sut := NewSyncronizer(&config.LoadBalancing{Enable: true}, cacheMock, nil)
@@ -26,14 +27,14 @@ func TestSyncronize_ShouldHandleAction_already_handled(t *testing.T) {
 	//Assert
 	assert.False(t, res)
 	assert.True(t, cacheMock.GetCalled)
-	assert.Equal(t, "test action Id", cacheMock.LastKey)
+	assert.Equal(t, "action:test action Id", cacheMock.LastKey)
 }
 
 func TestSyncronize_ShouldHandleAction_sets_mutex(t *testing.T) {
 	//Arrange
 	stringCmd := redis.NewStringCmd(context.Background())
 	stringCmd.SetErr(errors.New("some error"))
-	cacheMock := &mockCache{
+	cacheMock := &store.KVStoreMock{
 		NextStringCmd: stringCmd,
 	}
 	syncMock := &mockSync{
@@ -50,7 +51,7 @@ func TestSyncronize_ShouldHandleAction_sets_mutex(t *testing.T) {
 	//Assert
 	assert.True(t, res)
 	assert.True(t, cacheMock.GetCalled)
-	assert.Equal(t, "test action Id", cacheMock.LastKey)
+	assert.Equal(t, "action:test action Id", cacheMock.LastKey)
 	assert.True(t, syncMock.NewMutexCalled)
 	assert.Equal(t, "test action Id", syncMock.LastName)
 	assert.NotNil(t, sut.mutex)
@@ -95,7 +96,7 @@ func TestSyncronize_Release_returns_error(t *testing.T) {
 		NextUnlock: false,
 		NextError:  errors.New("some unlock error"),
 	}
-	mockCache := &mockCache{
+	mockCache := &store.KVStoreMock{
 		NextStringCmd: redis.NewStringCmd(context.Background()),
 	}
 	sut := &syncronize{
@@ -112,7 +113,7 @@ func TestSyncronize_Release_returns_error(t *testing.T) {
 	assert.Equal(t, "some unlock error", res.Error())
 	assert.True(t, mutexMock.UnlockCalled)
 	assert.True(t, mockCache.SetCalled)
-	assert.Equal(t, "test action id", mockCache.LastKey)
+	assert.Equal(t, "action:test action id", mockCache.LastKey)
 	assert.Equal(t, 1, mockCache.LastValue)
 	assert.Equal(t, 2*time.Second, mockCache.LastExpiration)
 }

@@ -2,12 +2,19 @@ package message
 
 import (
 	"sync"
+	"time"
 
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 )
 
-type dataID struct {
-	ID string `json:"id"`
+type messageInfo struct {
+	ID         string `json:"id"`
+	ExpireTime int64  `json:"expireTime"`
+}
+
+func (m *messageInfo) getExpiration() time.Duration {
+	return time.Duration(m.ExpireTime-time.Now().Unix()) * time.Second
 }
 
 type CacheRemover interface {
@@ -24,10 +31,12 @@ type Cacher interface {
 	Cache
 }
 
-func NewCacher(isMultiInstance bool, log *zap.SugaredLogger) Cacher {
+func NewCacher(isMultiInstance bool, log *zap.SugaredLogger, kvStore *redis.Client) Cacher {
 	if isMultiInstance {
-		//TODO
-		return nil
+		return &distributedCache{
+			kvStore: kvStore,
+			log:     log,
+		}
 	}
 
 	return &localCache{

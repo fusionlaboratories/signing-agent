@@ -20,11 +20,14 @@ func (c *localCache) AddMessage(message []byte) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	data := dataID{}
-	if err := json.Unmarshal(message, &data); err != nil {
+	info := messageInfo{}
+	if err := json.Unmarshal(message, &info); err != nil {
 		c.log.Debugf("message Cache: error [%v] while unmarshaling the message [%s]", err, string(message))
 	} else {
-		c.messages[data.ID] = message
+		//add only not expired messages
+		if info.getExpiration() > 0 {
+			c.messages[info.ID] = message
+		}
 	}
 }
 
