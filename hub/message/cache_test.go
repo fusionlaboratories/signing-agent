@@ -8,7 +8,7 @@ import (
 
 func TestCacher_NewCacher_local(t *testing.T) {
 	//Arrange/Act
-	sut := NewCacher(false, nil)
+	sut := NewCacher(false, nil, nil)
 
 	//Assert
 	assert.NotNil(t, sut)
@@ -19,8 +19,11 @@ func TestCacher_NewCacher_local(t *testing.T) {
 
 func TestCacher_NewCacher_distributed(t *testing.T) {
 	//Arrange/Act
-	sut := NewCacher(true, nil)
+	sut := NewCacher(true, nil, nil)
 
-	//Assert
-	assert.Nil(t, sut)
+	// Assert
+	assert.NotNil(t, sut)
+	_, ok := sut.(*distributedCache)
+
+	assert.True(t, ok)
 }

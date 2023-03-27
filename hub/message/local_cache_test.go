@@ -34,13 +34,18 @@ func TestLocalCache_AddMessage_adds_message(t *testing.T) {
 		messages: make(map[string][]byte),
 	}
 
+	data := messageInfo{
+		ID:         "test",
+		ExpireTime: time.Now().Unix() + 60,
+	}
+	testData, _ := json.Marshal(data)
 	//Act
-	sut.AddMessage([]byte(`{"id":"some id", "data":"test"}`))
+	sut.AddMessage(testData)
 
 	//Assert
 	assert.Equal(t, 1, len(sut.messages))
-	assert.Contains(t, sut.messages, "some id")
-	assert.Equal(t, `{"id":"some id", "data":"test"}`, string(sut.messages["some id"]))
+	assert.Contains(t, sut.messages, "test")
+	assert.Equal(t, testData, sut.messages["test"])
 }
 
 func TestLocalCache_GetMessages_returns_valid_clears_expired_and_invalid(t *testing.T) {
