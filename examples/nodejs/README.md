@@ -6,7 +6,7 @@ Running Signing Agent as a Docker container:
 - copy the config template from the created container local: `docker cp temp_signing_agent:/signing-agent/config-template.yaml ./volume/config.yaml`
 - edit the config.yaml as per your requirements
 
-    > See the guide to [configuration](www.developers.qredo.com/developer-guides/signing-agent/configure.md)
+    > See the guide to [configuration](https://developers.qredo.com/signing-agent/v2-signing-agent/configure)
 
 - delete the temporary container `docker rm temp_signing_agent`
 - start a Signing Agent container with the volume folder mounted in and connected to the previously created network:
