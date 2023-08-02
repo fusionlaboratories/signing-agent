@@ -57,3 +57,19 @@ func Test_StoreFactory_CreateStore_Creates_aws_store(t *testing.T) {
 	require.NotNil(t, sut)
 	assert.Equal(t, reflect.TypeOf(sut).String(), "*util.AWSStore")
 }
+
+func Test_StoreFactory_CreateStore_Creates_gcp_store(t *testing.T) {
+	// Arrange
+	cfg := &config.Config{
+		Store: config.Store{
+			Type: "gcp",
+		},
+	}
+
+	// Act
+	sut := CreateStore(cfg)
+
+	// Assert
+	require.NotNil(t, sut)
+	assert.Equal(t, reflect.TypeOf(sut).String(), "*util.GCPStore")
+}

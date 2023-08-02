@@ -12,6 +12,8 @@ func CreateStore(cfg *config.Config) KVStore {
 		return NewOciStore(cfg.Store.OciConfig)
 	case "aws":
 		return NewAWSStore(cfg.Store.AwsConfig)
+	case "gcp":
+		return NewGCPStore(cfg.Store.GcpConfig)
 	default:
 		return nil
 	}

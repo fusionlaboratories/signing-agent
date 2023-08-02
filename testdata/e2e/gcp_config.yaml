@@ -1,0 +1,4 @@
+# For GCP e2e tests the test environment should be pre-authenticated and contain credentials for the project and
+# secret manager secret as specified below. The GCP secret should be initialised to "initialise me".
+projectID: test-secretmanager-394215
+configSecret: TheFirstTestSecret
