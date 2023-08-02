@@ -102,6 +102,7 @@ type Store struct {
 
 	OciConfig OciConfig `yaml:"oci" json:"oci"`
 	AwsConfig AWSConfig `yaml:"aws" json:"aws"`
+	GcpConfig GCPConfig `yaml:"gcp" json:"gcp"`
 }
 
 // OciConfig is the OCI configuration when Base store type is set to oci
@@ -130,6 +131,17 @@ type AWSConfig struct {
 	Region string `yaml:"region" json:"region"`
 
 	// The name of the AWS Secrets Manager secret containing the encrypted data.
+	// example: secrets_manager_secret
+	SecretName string `yaml:"configSecret" json:"configSecret"`
+}
+
+// GCPConfig is the GCP configuration when Base store type is set to gcp
+type GCPConfig struct {
+
+	// The GCP project ID containing the secret manager secret to use.
+	ProjectID string `yaml:"projectID" json:"projectID"`
+
+	// The name of the GCP Secret Manager secret containing the encrypted data.
 	// example: secrets_manager_secret
 	SecretName string `yaml:"configSecret" json:"configSecret"`
 }
