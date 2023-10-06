@@ -11,21 +11,17 @@ build:
 	    -tags debug \
 	    -ldflags ${LDFLAGS} \
         -o out/signing-agent \
-        github.com/qredo/signing-agent/cmd/service
+        github.com/qredo/signing-agent/cmd/app
 
-test: unittest apitest
+test: unittest
 
 unittest:
 	@echo "running unit tests"
 	go test ${UNITTESTS} -v -short=t
 
-apitest:
-	@echo "running tests in ./tests/restapi"
-	go test ./tests/restapi -v -short=t
-
-e2etest:
-	@echo "environment variable for APIKEY and BASE64PKEY are needed for e2e tests"
-	go test ./tests/e2e -v -short=t
+integrationtest:
+	@echo "running integration tests"
+	go test ./tests/integration -v -short=t
 
 update-packages:
 	@echo "updating all go packages"
@@ -39,6 +35,3 @@ test-all:
 lint:
 	@echo "running lint"
 	golangci-lint run
-
-swagger:
-	@docs/swagger-generate.sh

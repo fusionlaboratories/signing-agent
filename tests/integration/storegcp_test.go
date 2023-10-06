@@ -1,6 +1,5 @@
 package e2e
 
-/*
 import (
 	"log"
 	"os"
@@ -14,16 +13,15 @@ import (
 	"github.com/qredo/signing-agent/internal/util"
 )
 
-func createGCPConfig() *config.Config {
+func createGCPConfig() config.Config {
 	pwd, _ := os.Getwd()
-	f, err := os.ReadFile(pwd + "/../../testdata/e2e/gcp_config.yaml")
+	f, err := os.ReadFile(pwd + "/../../testdata/integration/gcp_config.yaml")
 	if err != nil {
 		log.Fatalf("error reading test config file: %v", err)
 	}
 
 	var testCfg struct {
 		ProjectID  string `yaml:"projectID"`
-		LocationID string `yaml:"locationID"`
 		SecretName string `yaml:"configSecret"`
 	}
 	err = yaml.Unmarshal(f, &testCfg)
@@ -31,12 +29,11 @@ func createGCPConfig() *config.Config {
 		log.Fatalf("error unmarshaling test config file: %v", err)
 	}
 
-	cfg := &config.Config{
+	cfg := config.Config{
 		Store: config.Store{
 			Type: "gcp",
 			GcpConfig: config.GCPConfig{
 				ProjectID:  testCfg.ProjectID,
-				LocationID: testCfg.LocationID,
 				SecretName: testCfg.SecretName,
 			},
 		},
@@ -112,4 +109,3 @@ func TestGCPStoreDeleteKey(t *testing.T) {
 	_, err = store.Get(key)
 	assert.Equal(t, "not found", err.Error())
 }
-*/

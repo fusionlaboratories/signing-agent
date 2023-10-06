@@ -1,6 +1,5 @@
 package e2e
 
-/*
 import (
 	"context"
 	"os"
@@ -17,15 +16,15 @@ import (
 	"github.com/qredo/signing-agent/internal/util"
 )
 
-func createOciConfig() *config.Config {
+func createOciConfig() config.Config {
 	pwd, _ := os.Getwd()
-	os.Setenv("OCI_CONFIG_FILE", pwd+"/../../testdata/e2e/oci_config")
+	os.Setenv("OCI_CONFIG_FILE", pwd+"/../../testdata/integration/oci_config")
 
 	compartment := os.Getenv("OCI_COMPARTMENT")
 	vault := os.Getenv("OCI_VAULT")
 	encryptionkey := os.Getenv("OCI_ENC_KEY")
 
-	cfg := &config.Config{
+	cfg := config.Config{
 		Store: config.Store{
 			Type: "oci",
 			OciConfig: config.OciConfig{
@@ -40,7 +39,7 @@ func createOciConfig() *config.Config {
 	return cfg
 }
 
-func deleteSecret(t *testing.T, cfg *config.Config) {
+func deleteSecret(t *testing.T, cfg config.Config) {
 	vaults_client, err := vault.NewVaultsClientWithConfigurationProvider(common.DefaultConfigProvider())
 	require.Nil(t, err)
 
@@ -156,4 +155,3 @@ cleanup:
 	// Cleanup
 	deleteSecret(t, cfg)
 }
-*/

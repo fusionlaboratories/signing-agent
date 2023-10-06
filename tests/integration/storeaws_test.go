@@ -1,6 +1,5 @@
 package e2e
 
-/*
 import (
 	"log"
 	"os"
@@ -14,9 +13,9 @@ import (
 	"github.com/qredo/signing-agent/internal/util"
 )
 
-func createAWSConfig() *config.Config {
+func createAWSConfig() config.Config {
 	pwd, _ := os.Getwd()
-	f, err := os.ReadFile(pwd + "/../../testdata/e2e/aws_config.yaml")
+	f, err := os.ReadFile(pwd + "/../../testdata/integration/aws_config.yaml")
 	if err != nil {
 		log.Fatalf("error reading test config file: %v", err)
 	}
@@ -30,7 +29,7 @@ func createAWSConfig() *config.Config {
 		log.Fatalf("error unmarshaling test config file: %v", err)
 	}
 
-	cfg := &config.Config{
+	cfg := config.Config{
 		Store: config.Store{
 			Type: "aws",
 			AwsConfig: config.AWSConfig{
@@ -110,4 +109,3 @@ func TestAWSStoreDeleteKey(t *testing.T) {
 	_, err = store.Get(key)
 	assert.Equal(t, "not found", err.Error())
 }
-*/

@@ -37,7 +37,7 @@ PROJECT_DIR="$(cd "$(dirname "${0}")/.."; pwd)"
     make test && \
     make install
 
-	echo "Running e2e test"
+	echo "Running integration tests"
 	cd "$PROJECT_DIR"
 
   echo $OCI_RSA > "$(pwd)/oci_rsa.b64"
@@ -47,8 +47,6 @@ PROJECT_DIR="$(cd "$(dirname "${0}")/.."; pwd)"
   mkdir -p /home/gitlab-runner/.oci
   sed "s~patch-me-oci-pem~$PEM_PATH~" "$OCI_CONFIG" > "/home/gitlab-runner/.oci/config"
 
-  go test -v tests/e2e/storeaws_test.go
-  go test -v tests/e2e/storeoci_test.go
-  go test -v tests/e2e/register_flow_test.go tests/e2e/action_autoapprove_test.go
-
+  go test -v tests/integration/storeaws_test.go
+  go test -v tests/integration/storeoci_test.go
 )

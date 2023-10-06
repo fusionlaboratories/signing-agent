@@ -56,16 +56,6 @@ docker_export() {
       -f dockerfiles/Dockerfile .
 }
 
-# Build a CLI docker image for the specified architecture and store it in a tar file
-docker_export_cli() {
-  if test -f sa-cli-$1-*.tar; then
-      rm sa-cli-$1-*.tar
-  fi
-  docker buildx build \
-      --platform linux/$1 \
-      --output "type=docker,push=false,name=sa-cli:dev-$1,dest=sa-cli-$1-$IMAGE_DATE.tar" \
-      -f dockerfiles/DockerfileCLI .
-}
 
 # Build docker images for all supported architectures
 docker_export_allarch() {
@@ -78,21 +68,6 @@ docker_export_allarch() {
   rm -rf vendor
 }
 
-# Build CLI docker images for all supported architectures
-docker_export_cli_allarch() {
-  for arch in amd64 arm64 ; do
-      docker_export_cli $arch
-  done
-  rm -rf vendor
-}
-
-local_cli_build() {
-  go mod tidy
-  go build \
-      -o sa-cli \
-      github.com/qredo/signing-agent/cmd/sa-cli
-}
-
 # Build a the Go binary to run in the local environment
 local_build() {
   go mod tidy
@@ -102,7 +77,7 @@ local_build() {
                 -X 'main.buildVersion=$BUILD_VERSION' \
                 -X 'main.buildType=$BUILD_TYPE'" \
       -o out/signing-agent \
-      github.com/qredo/signing-agent/cmd/service
+      github.com/qredo/signing-agent/cmd/app
 }
 
 if [ -n "$1" ]; then
@@ -121,12 +96,6 @@ if [ -n "$1" ]; then
       ;;
     docker_multiarch)
       docker_export_allarch
-      ;;
-    local_cli)
-      local_cli_build
-      ;;
-    docker_export_cli_allarch)
-      docker_export_cli_allarch
       ;;
     docker_unittest)
       docker_test_build
