@@ -1,12 +1,7 @@
 .DS_Store
-.idea/
 private.pem
 public.pem
-apikey
-apikey_local
-apikey_play
 out/*
-local-config.yaml
 volume/
 *.db
 *.html
@@ -16,8 +11,8 @@ volume/
 incubator-milagro-crypto-c
 config.yaml
 .env
-node_modules
 .vscode/launch.json
 .gitignore
-cmd/service/cc.yaml
-.spectral.yaml
+cmd/app/cc.yaml
+cmd/app/main
+

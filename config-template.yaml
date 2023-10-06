@@ -1,12 +1,12 @@
 base:
-  qredoAPI: https://sandbox-api.qredo.network/api/v1/p
+  qredoAPI: https://backend.uat.qredo.network/api/v2
   pin: 0
 autoApproval:
   enabled: true
   retryIntervalMaxSec: 300
   retryIntervalSec: 5
 websocket:
-  qredoWebsocket: wss://sandbox-api.qredo.network/api/v1/p/coreclient/feed
+  qredoWebsocket: wss://backend.uat.qredo.network/api/v2/actions/signrequests
   reconnectTimeoutSec: 300
   reconnectIntervalSec: 5
   pingPeriodSec: 5

@@ -65,7 +65,7 @@ RUN CGO_ENABLED=1 \
                                                             -X 'github.com/qredo/signing-agent/service.commit=$BUILD_COMMIT' \
                                                             -X 'github.com/qredo/signing-agent/service.version=$BUILD_VERSION'" \
       -o signing-agent \
-      github.com/qredo/signing-agent/cmd/service
+      github.com/qredo/signing-agent/cmd/app
 
 RUN useradd appuser
 USER appuser
