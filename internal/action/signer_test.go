@@ -236,7 +236,7 @@ func TestSigner_ActionApprove_signAction_request_error(t *testing.T) {
 		jd := json.NewDecoder(r.Body)
 
 		defer r.Body.Close()
-		jd.Decode(&lastSignRequest)
+		_ = jd.Decode(&lastSignRequest)
 
 		lastMethod = r.Method
 		lastURL = r.URL.String()
@@ -330,7 +330,7 @@ func TestSigner_ActionReject_signAction_request_success(t *testing.T) {
 		jd := json.NewDecoder(r.Body)
 
 		defer r.Body.Close()
-		jd.Decode(&lastSignRequest)
+		_ = jd.Decode(&lastSignRequest)
 
 		lastMethod = r.Method
 		lastURL = r.URL.String()
@@ -379,7 +379,7 @@ func TestSigner_ApproveActionMessage_signAction_request_success(t *testing.T) {
 		jd := json.NewDecoder(r.Body)
 
 		defer r.Body.Close()
-		jd.Decode(&lastSignRequest)
+		_ = jd.Decode(&lastSignRequest)
 
 		lastMethod = r.Method
 		lastURL = r.URL.String()

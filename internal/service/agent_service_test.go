@@ -154,9 +154,10 @@ func TestAgentService_Start_agent_not_registered_doesnt_run_hub(t *testing.T) {
 		nil, nil)
 
 	//Act
-	sut.Start()
+	err := sut.Start()
 
 	//Assert
+	assert.Nil(t, err)
 	assert.False(t, mockFeedHub.RunCalled)
 	assert.False(t, mockFeedHub.RegisterClientCalled)
 }
@@ -171,9 +172,11 @@ func TestAgentService_Start_autoapprover_not_enabled_fail_to_run_hub(t *testing.
 		nil, &store.AgentInfo{})
 
 	//Act
-	sut.Start()
+	err := sut.Start()
 
 	//Assert
+	assert.NotNil(t, err)
+	assert.Equal(t, "failed to start the feed hub", err.Error())
 	assert.True(t, mockFeedHub.RunCalled)
 	assert.False(t, mockFeedHub.RegisterClientCalled)
 }
@@ -194,9 +197,11 @@ func TestAgentService_Start_autoapprover_enabled_hub_doesnt_run(t *testing.T) {
 	}
 
 	//Act
-	sut.Start()
+	err := sut.Start()
 
 	//Assert
+	assert.NotNil(t, err)
+	assert.Equal(t, "failed to start the feed hub", err.Error())
 	assert.True(t, mockFeedHub.RunCalled)
 	assert.False(t, mockFeedHub.RegisterClientCalled)
 	assert.True(t, mockApprover.ListenCalled)
@@ -216,7 +221,7 @@ func TestAgentService_Start_run_hub_autoapprove_not_enabled(t *testing.T) {
 		feedHub:   mockFeedHub,
 	}
 	//Act
-	sut.Start()
+	_ = sut.Start()
 
 	//Assert
 	assert.True(t, mockFeedHub.RunCalled)
@@ -242,7 +247,7 @@ func TestAgentService_Start_registers_auto_approval(t *testing.T) {
 	}
 
 	//Act
-	sut.Start()
+	_ = sut.Start()
 
 	//Assert
 	assert.True(t, mockFeedHub.RunCalled)
@@ -600,7 +605,7 @@ func TestAgentService_RegisterAgent_fails_to_updateAPIKey(t *testing.T) {
 		jd := json.NewDecoder(r.Body)
 
 		defer r.Body.Close()
-		jd.Decode(&lastSaveKeyDataRequest)
+		_ = jd.Decode(&lastSaveKeyDataRequest)
 		return nil, errors.New("req error")
 	}
 
