@@ -190,7 +190,7 @@ func (h agentSrv) GetWebsocketStatus() *api.HealthCheckStatusResponse {
 
 func (a agentSrv) GetAgentDetails() (*api.GetAgentDetailsResponse, error) {
 	if a.agentInfo == nil {
-		return nil, defs.ErrBadRequest().WithDetail("agent not registered")
+		return nil, defs.ErrNotFound().WithDetail("agent not registered")
 	}
 
 	name, err := a.getAgentName()

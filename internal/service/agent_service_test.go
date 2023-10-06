@@ -402,7 +402,7 @@ func TestAgentService_GetAgentDetails_agent_not_registered(t *testing.T) {
 	apiErr := err.(*defs.APIError)
 	code, detail := apiErr.APIError()
 	assert.Equal(t, "agent not registered", detail)
-	assert.Equal(t, http.StatusBadRequest, code)
+	assert.Equal(t, http.StatusNotFound, code)
 }
 
 func TestAgentService_GetAgentDetails_fails_to_get_agent_name(t *testing.T) {

@@ -65,6 +65,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetAgentDetailsResponse'
+        "404":
+            description: Bad request
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponseNotFound'
+        "500":
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponseInternal'
   /api/v2/client/feed:
     get:
       summary: Get action approval requests Feed (via websocket) from Qredo Backend
@@ -608,5 +620,15 @@ components:
                 example: failed to register agent
                 type: string
         type: object
-  
-
+    ErrorResponseNotFound:
+        properties:
+            Code:
+                description: The result code of the request.
+                example: 404
+                format: int64
+                type: integer
+            Detail:
+                description: The result message of the request.
+                example: agent not registered
+                type: string
+        type: object
