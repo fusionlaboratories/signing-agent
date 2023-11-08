@@ -363,11 +363,6 @@ components:
     Base:
       type: object
       properties:
-          pin:
-              description: The pin number to use to provide a zero knowledge proof token for communication with the Partner API.
-              example: 123456
-              format: int64
-              type: integer
           qredoAPI:
               description: The URL of the Qredo API.
               example: https://backend.uat.qredo.network/api/v2

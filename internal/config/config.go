@@ -18,7 +18,6 @@ type Config struct {
 }
 
 type Base struct {
-	PIN      int    `yaml:"pin" json:"pin"`
 	QredoAPI string `yaml:"qredoAPI" json:"qredoAPI"`
 }
 
@@ -105,7 +104,6 @@ func (c *Config) Default() {
 		},
 	}
 
-	c.Base.PIN = 0
 	c.Base.QredoAPI = "https://backend.uat.qredo.network/api/v2" //TODO - check if this is the right env. Atm is down
 	c.AutoApprove = AutoApprove{
 		Enabled:          false,

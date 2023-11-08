@@ -1,6 +1,5 @@
 base:
   qredoAPI: https://backend.uat.qredo.network/api/v2
-  pin: 0
 autoApproval:
   enabled: true
   retryIntervalMaxSec: 300
