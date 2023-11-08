@@ -481,7 +481,6 @@ func TestRouter_HealthCheckConfig(t *testing.T) {
 	//Arrange
 	testConfig := config.Config{
 		Base: config.Base{
-			PIN:      25,
 			QredoAPI: "some url",
 		},
 		HTTP: config.HttpSettings{
@@ -501,7 +500,6 @@ func TestRouter_HealthCheckConfig(t *testing.T) {
 
 	data, ok := response.(config.Config)
 	assert.True(t, ok)
-	assert.Equal(t, 25, data.Base.PIN)
 	assert.Equal(t, "some url", data.Base.QredoAPI)
 	assert.Equal(t, "some address", data.HTTP.Addr)
 }
