@@ -10,9 +10,8 @@ info:
         name: Qredo API Services
         url: https://www.qredo.com
     description: |-
-        TODO - Margarita
-        The Qredo Signing Agent service interacts with [Partner API](https://developers.qredo.com/partner-api/api/swagger/) to register a Signing Agent to automate approvals according to your custody policy. <br/>
-        Authentication and encryption are required; set up your [API key and secret in the Qredo Web App](https://developers.qredo.com/signing-agent/v2-signing-agent/get-started/). <br/>
+        The Qredo Signing Agent service interacts with the Qredo API v2 to register a Signing Agent to automate approvals according to your custody policy. <br/>
+        To start using the Signing Agent, you need to set up an API key in the Qredo Web App, run the Signing Agent, and register it. To learn more, see the [Get Started guide](https://developers.qredo.com/developer-guides/signing-agent-v2/#step-1-get-an-api-key-and-secret). <br/>
     license:
         name: APACHE 2.0
         url: https://www.apache.org/licenses/LICENSE-2.0
@@ -253,7 +252,7 @@ components:
               type: string
           feedURL:
               description: The feed WebSocket URL.
-              example: http://localhost:8007/api/v2/client/feed
+              example: ws://0.0.0.0:8007/api/v2/client/feed
               type: string
           name:
               description: The name of the Agent.
@@ -365,7 +364,7 @@ components:
       properties:
           qredoAPI:
               description: The URL of the Qredo API.
-              example: https://backend.uat.qredo.network/api/v2
+              example: https://api-v2.qredo.network/api/v2
               type: string
       
     StatusResponse:
@@ -538,7 +537,7 @@ components:
                 type: integer
             qredoWebsocket:
                 description: The URL of the Qredo WebSocket feed.
-                example: wss://backend.uat.qredo.network/api/v2/actions/signrequests - TODO - check if this is the right env. Atm is down
+                example: wss://api-v2.qredo.network/api/v2/actions/signrequests
                 type: string
             readBufferSize:
                 description: The WebSocket upgrader read buffer size in bytes.
@@ -588,7 +587,7 @@ components:
             type: string
         remoteFeedURL:
             description: The server WebSocket URL.
-            example: wss://backend.uat.qredo.network/api/v2/actions/signrequests
+            example: wss://api-v2.qredo.network/api/v2/actions/signrequests
             type: string
     
     ErrorResponseBadRequest:

@@ -104,7 +104,7 @@ func (c *Config) Default() {
 		},
 	}
 
-	c.Base.QredoAPI = "https://backend.uat.qredo.network/api/v2" //TODO - check if this is the right env. Atm is down
+	c.Base.QredoAPI = "https://api-v2.qredo.network/api/v2"
 	c.AutoApprove = AutoApprove{
 		Enabled:          false,
 		RetryIntervalMax: 300,
@@ -113,7 +113,7 @@ func (c *Config) Default() {
 	c.Websocket = WebSocketConfig{
 		ReconnectTimeOut:  300,
 		ReconnectInterval: 5,
-		QredoWebsocket:    "wss://backend.uat.qredo.network/api/v2/actions/signrequests", //TODO - check if this is the right env. Atm is down
+		QredoWebsocket:    "wss://api-v2.qredo.network/api/v2/actions/signrequests",
 		PingPeriod:        5,
 		PongWait:          10,
 		WriteWait:         10,
