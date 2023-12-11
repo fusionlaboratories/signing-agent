@@ -1,23 +1,241 @@
+openapi: 3.0.2
+servers:
+  - url: 'http://localhost:8007'
+  - url: 'https://localhost:8007'
+   
 security: []
-basePath: /api/v1
-definitions:
-    AWSConfig:
-        description: AWSConfig is the AWS configuration when Base store type is set to aws
-        properties:
-            configSecret:
-                description: The name of the AWS Secrets Manager secret containing the encrypted data.
-                example: secrets_manager_secret
-                type: string
-            region:
-                description: The AWS region where the secret is stored.
-                example: eu-west-3
-                type: string
+info:
+    contact:
+        email: support@qredo.com
+        name: Qredo API Services
+        url: https://www.qredo.com
+    description: |-
+        The Qredo Signing Agent service interacts with the Qredo API v2 to register a Signing Agent to automate approvals according to your custody policy. <br/>
+        To start using the Signing Agent, you need to set up an API key in the Qredo Web App, run the Signing Agent, and register it. To learn more, see the [Get Started guide](https://developers.qredo.com/developer-guides/signing-agent-v2/#step-1-get-an-api-key-and-secret). <br/>
+    license:
+        name: APACHE 2.0
+        url: https://www.apache.org/licenses/LICENSE-2.0
+    title: Qredo Signing Agent V2
+    version: 2.0.0
+paths:
+  /api/v2/register:
+    post:
+      description: This will register the agent only if there is none already registered.
+      operationId: RegisterAgent
+      summary: Register a new agent
+      tags:
+          - client
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRegisterRequest'
+      responses:
+        "200":
+            description: Success - agent is registered
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/AgentRegisterResponse'
+        "400":
+            description: Bad request
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponseBadRequest'
+      
+        "500":
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponseInternal'
+  /api/v2/client:
+    get:
+      tags:
+        - client
+      summary: Get information about the registered agent
+      description: This endpoint retrieves the `agentID`, `feedURL` and `name` if an agent is registered.
+      operationId: GetClient
+      responses:
+        '200':
+          description: Success - agent info is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAgentDetailsResponse'
+        "404":
+            description: Bad request
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponseNotFound'
+        "500":
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponseInternal'
+  /api/v2/client/feed:
+    get:
+      summary: Get action approval requests Feed (via websocket) from Qredo Backend
+      tags:
+        - client
+      description: This endpoint feeds approval requests coming from the Qredo Backend to the agent.
+      operationId: ClientFeed
+      responses:
+        "200":
+            description: Success - action info is received
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ClientFeedActionResponse'
+        "500":
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponseInternal'
+                  
+  /api/v2/client/action/{action_id}:
+    delete:
+      summary: Reject a transaction
+      tags:
+        - action
+      description: This endpoint rejects an action based on the action ID, `action_id`, passed.
+      operationId: ActionReject
+      parameters:
+        - schema:
+            type: string
+          name: action_id
+          in: path
+          required: true
+          description: The ID of the action that is received from the feed.
+          example: 2WKtGnLJugxtYHOg2KSNYggRf8Y
+      
+      responses:
+        "200":
+            description: Success - action is rejected
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ActionResponse'
+        "400":
+            description: Bad request
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponseBadRequest'
+        "500":
+            description: Bad request
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponseInternal'
+     
+    put:
+      summary: Approve a transaction
+      tags:
+          - action
+      description: This endpoint approves an action based on the action ID, `action_id`, passed.
+      operationId: ActionApprove
+      parameters:
+        - schema:
+            type: string
+          name: action_id
+          in: path
+          required: true
+          description: The ID of the action that is received from the feed.
+          example: 2WKtGnLJugxtYHOg2KSNYggRf8Y
+     
+      responses:
+        "200":
+            description: Success - action is approved
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ActionResponse'
+        "400":
+            description: Bad request
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponseBadRequest'
+        "500":
+            description: Bad request
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponseInternal'
+  /api/v2/healthcheck/config:
+    get:
+        summary: Check application configuration
+        tags:
+          - healthcheck
+        description: This endpoint returns the application configuration.
+        operationId: HealthcheckConfig
+        responses:
+            "200":
+                description: Success - the configuration info is retrieved
+                content:
+                 application/json:
+                    schema:
+                      $ref: '#/components/schemas/ConfigResponse'
+  /api/v2/healthcheck/status:
+    get:
+        description: This endpoint returns the application status.
+        operationId: HealthcheckStatus
+        summary: Check application status
+        tags:
+            - healthcheck
+        responses:
+           "200":
+                description: Success - the status information is retrieved
+                content:
+                 application/json:
+                    schema:
+                      $ref: '#/components/schemas/StatusResponse'
+        
+  /api/v2/healthcheck/version:
+      get:
+        description: This endpoint returns information about the application version.
+        operationId: HealthCheckVersion
+        summary: Check application version
+        tags:
+             - healthcheck
+        responses:
+              "200":
+                description: Success - the version information is retrieved
+                content:
+                 application/json:
+                    schema:
+                      $ref: '#/components/schemas/VersionResponse'
+         
+components:
+  schemas:
+    AgentRegisterRequest:
         type: object
+        properties:
+            APIKeyID:
+                description: The ID of the Qredo API Key.
+                example: a.HLRrw3PSiS45QL... (truncated)
+                type: string
+            secret:
+                description: The secret of the Qredo API Key.
+                example: JDJhJDA0JGlHNTV2... (truncated)
+                type: string
+            workspaceID:
+                description: The ID of the Qredo workspace in which the API Key is defined.
+                example: 2VvsjKTf31cnRwM.. (truncated)
+                type: string
+    AgentRegisterResponse:
+        $ref: '#/components/schemas/GetAgentDetailsResponse'
     ActionResponse:
+        type: object
         properties:
             actionID:
-                description: The ID of the transaction.
-                example: eXAmplElvWbnPf1YaAc1XD85jJX
+                description: The ID of the action.
+                example: 2WKtGnLJugxtYHOg2KSNYggRf8Y
                 type: string
             status:
                 description: The status of the transaction
@@ -25,133 +243,137 @@ definitions:
                     - approved
                     - rejected
                 type: string
+    GetAgentDetailsResponse:
+      type: object
+      properties:
+          agentID:
+              description: The ID of the agent.
+              example: a.HLRrw3PSiS45QL... (truncated)
+              type: string
+          feedURL:
+              description: The feed WebSocket URL.
+              example: ws://0.0.0.0:8007/api/v2/client/feed
+              type: string
+          name:
+              description: The name of the Agent.
+              example: My Signing Agent
+              type: string   
+    ClientFeedActionResponse:
         type: object
-    AgentRegisterResponse:
         properties:
-            agentID:
-                description: The ID of the agent.
-                example: exAMplePrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
-                type: string
-            feedURL:
-                description: The feed WebSocket URL.
-                example: http://localhost:8007/api/v1/client/feed
-                type: string
-        type: object
-    AutoApprove:
-        properties:
-            enabled:
-                description: Activate the automatic approval of every transaction that is received.
-                example: true
-                type: boolean
-            retryIntervalMaxSec:
-                description: The maximum time over which the Signing Agent retries action approval. After this period, it’s considered as a failure.
-                example: 300
-                format: int64
-                type: integer
-            retryIntervalSec:
-                description: The interval over which the Signing Agent attempts to approve an action. It will cycle this interval until the `retryIntervalMaxSec` is reached.
-                example: 5
-                format: int64
-                type: integer
-        type: object
-    Base:
-        properties:
-            pin:
-                description: The pin number to use to provide a zero knowledge proof token for communication with the Partner API.
-                example: 123456
-                format: int64
-                type: integer
-            qredoAPI:
-                description: The URL of the Qredo API.
-                example: https://sandbox-api.qredo.network
-                type: string
-        type: object
-    ClientFeedResponse:
-        properties:
-            coreClientID:
-                description: The ID of the agent.
-                example: exAMplePrDdcDDVU8idhuJGK2U1P4vmQcsp8wnED8pPR
-                type: string
-            expireTime:
-                description: The time that the transaction will expire, utc unix time.
-                example: 1676184187
-                format: int64
-                type: integer
-            id:
-                description: The ID of the transaction.
-                example: eXAmplElvWbnPf1YaAc1XD85jJX
-                type: string
-            status:
-                description: The status of the transaction.
-                enum:
-                    - pending
-                    - expired
-                    - approved
-                    - rejected
-                example: pending
-                type: string
-            timestamp:
-                description: The time that the transaction was started, utc unix time.
-                example: 1670341423
-                format: int64
-                type: integer
-            type:
-                description: The type of the transaction.
-                enum:
-                    - ApproveWithdraw
-                    - ApproveTransfer
-                example: ApproveWithdraw
-                type: string
-        type: object
-    ClientRegisterRequest:
-        properties:
-            APIKey:
-                description: The API key for the partner API.
-                example: eyJrZXkiOiJHM0Fo... (truncated)
-                type: string
-            base64PrivateKey:
-                description: The Base64-encoded private key pem of which the public key has been registered in the Partner API.
-                example: LS0tLS1CRUdJTiBS... (truncated)
-                type: string
-            name:
-                description: The name of the agent.
-                example: test-agent
-                type: string
-        type: object
+          id:
+            type: string
+            example: 2WKtGnLJugxtYHOgs...(truncated)
+          type:
+            type: integer
+            example: 25
+          status:
+            type: integer
+            example: 1
+          description:
+            type: string
+            example: ""
+          approverID:
+            type: string
+            example: a.HLRrw3PSiS45QLf...(truncated)
+          dataID:
+            type: string
+            example: 46vbH854RpRAZoWtf...(truncated)
+          senderID:
+            type: string
+            example: 46vbH854RpRAZoWxf...(truncated)
+          payload:
+            type: string
+            example: yJwb2xpY3lOYW1lIj...(truncated)
+          messages:
+            type: array
+            items:
+              type: string
+              example: CAESIJ2RefS68iy93ng...(truncated)
+          signatures:
+            type: array
+            items:
+              type: string
+            example: null
+          timestamp:
+            type: integer
+            example: 1696493005
+          actionSubject:
+            type: object
+            example: null
+          actionTime:
+            type: integer
+          expireTime:
+            type: integer
+            example: 1696496605
+          metadata:
+            type: string
+            example: "e30="
+          created:
+            type: integer
+            example: 1696496605
+  
     ConfigResponse:
-        properties:
-            autoApproval:
-                $ref: '#/definitions/AutoApprove'
-            base:
-                $ref: '#/definitions/Base'
-            http:
-                $ref: '#/definitions/HttpSettings'
-            loadBalancing:
-                $ref: '#/definitions/LoadBalancing'
-            logging:
-                $ref: '#/definitions/Logging'
-            store:
-                $ref: '#/definitions/Store'
-            websocket:
-                $ref: '#/definitions/WebSocketConfig'
-        type: object
-    ErrorResponse:
-        properties:
-            Code:
-                description: The result code of the request.
-                example: 404
-                format: int64
-                type: integer
-            Msg:
-                description: The result message of the request.
-                example: Not found
-                type: string
-        type: object
-    GetClientResponse:
-        properties:
-            Body:
-                $ref: '#/definitions/GetClientResponse'
-        type: object
+      type: object
+      properties:
+          autoApproval:
+              $ref: '#/components/schemas/AutoApprove'
+          base:
+              $ref: '#/components/schemas/Base'
+          http:
+              $ref: '#/components/schemas/HttpSettings'
+          loadBalancing:
+              $ref: '#/components/schemas/LoadBalancing'
+          logging:
+              $ref: '#/components/schemas/Logging'
+          store:
+              $ref: '#/components/schemas/Store'
+          websocket:
+              $ref: '#/components/schemas/WebSocketConfig'
+    AWSConfig:
+      type: object
+      description: AWSConfig is the AWS configuration when Base store type is set to aws
+      properties:
+          configSecret:
+              description: The name of the AWS Secrets Manager secret containing the encrypted data.
+              example: secrets_manager_secret
+              type: string
+          region:
+              description: The AWS region where the secret is stored.
+              example: eu-west-3
+              type: string
+    AutoApprove:
+      type: object
+      properties:
+          enabled:
+              description: Activate the automatic approval of every transaction that is received.
+              example: true
+              type: boolean
+          retryIntervalMaxSec:
+              description: The maximum time over which the Signing Agent retries action approval. After this period, it’s considered as a failure.
+              example: 300
+              format: int64
+              type: integer
+          retryIntervalSec:
+              description: The interval over which the Signing Agent attempts to approve an action. It will cycle this interval until the `retryIntervalMaxSec` is reached.
+              example: 5
+              format: int64
+              type: integer
+    Base:
+      type: object
+      properties:
+          qredoAPI:
+              description: The URL of the Qredo API.
+              example: https://api-v2.qredo.network/api/v2
+              type: string
+      
+    StatusResponse:
+      type: object
+      properties:
+        websocket:
+          $ref: '#/components/schemas/HealthCheckStatusResponse'
+ 
+  
     HttpSettings:
         properties:
             CORSAllowOrigins:
@@ -161,7 +383,7 @@ definitions:
                     type: string
                 type: array
             TLS:
-                $ref: '#/definitions/TLSConfig'
+                $ref: '#/components/schemas/TLSConfig'
             addr:
                 description: The address and port the service runs on [the bind address and port the build in API endpoints].
                 example: 0.0.0.0:8007
@@ -188,7 +410,7 @@ definitions:
                 format: int64
                 type: integer
             redis:
-                $ref: '#/definitions/RedisConfig'
+                $ref: '#/components/schemas/RedisConfig'
         type: object
     Logging:
         properties:
@@ -251,21 +473,17 @@ definitions:
                 format: int64
                 type: integer
         type: object
-    StatusResponse:
-        properties:
-            websocket:
-                $ref: '#/definitions/WebsocketStatus'
-        type: object
+         
     Store:
         properties:
             aws:
-                $ref: '#/definitions/AWSConfig'
+                $ref: '#/components/schemas/AWSConfig'
             file:
                 description: The path to the storage file when `file` store is used.
                 example: /volume/ccstore.db
                 type: string
             oci:
-                $ref: '#/definitions/OciConfig'
+                $ref: '#/components/schemas/OciConfig'
             type:
                 description: The type of store to use to store the private key information for the Signing Agent.
                 enum:
@@ -319,7 +537,7 @@ definitions:
                 type: integer
             qredoWebsocket:
                 description: The URL of the Qredo WebSocket feed.
-                example: wss://sandbox-api.qredo.network/api/v1/p/coreclient/feed
+                example: wss://api-v2.qredo.network/api/v2/actions/signrequests
                 type: string
             readBufferSize:
                 description: The WebSocket upgrader read buffer size in bytes.
@@ -347,215 +565,64 @@ definitions:
                 format: int64
                 type: integer
         type: object
-    WebsocketStatus:
+    HealthCheckStatusResponse:
+      type: object
+      properties:
+        connectedClients:
+            description: The number of connected feed clients.
+            example: 2
+            format: uint32
+            type: integer
+        localFeedURL:
+            description: The local feed WebSocket URL.
+            example: ws://localhost:8007/api/v2/client/feed
+            type: string
+        readyState:
+            description: The state of the WebSocket connection with the server.
+            enum:
+                - OPEN
+                - CLOSED
+                - CONNECTING
+            example: OPEN
+            type: string
+        remoteFeedURL:
+            description: The server WebSocket URL.
+            example: wss://api-v2.qredo.network/api/v2/actions/signrequests
+            type: string
+    
+    ErrorResponseBadRequest:
         properties:
-            connectedClients:
-                description: The number of connected feed clients.
-                example: 2
-                format: uint32
+            Code:
+                description: The result code of the request.
+                example: 400
+                format: int64
                 type: integer
-            localFeedURL:
-                description: The local feed WebSocket URL.
-                example: ws://localhost:8007/api/v1/client/feed
-                type: string
-            readyState:
-                description: The state of the WebSocket connection with the server.
-                enum:
-                    - OPEN
-                    - CLOSED
-                    - CONNECTING
-                example: OPEN
-                type: string
-            remoteFeedURL:
-                description: The server WebSocket URL.
-                example: wss://sandbox-api.qredo.network/api/v1/p/coreclient/feed,
+            Detail:
+                description: The result message of the request.
+                example: signing agent already registered
                 type: string
         type: object
-host: localhost:8007
-info:
-    contact:
-        email: support@qredo.com
-        name: Qredo API Services
-        url: https://www.qredo.com
-    description: |-
-        The Qredo Signing Agent service interacts with [Partner API](https://developers.qredo.com/partner-api/api/swagger/) to register a Signing Agent to automate approvals according to your custody policy. <br/>
-        Authentication and encryption are required; set up your [API key and secret in the Qredo Web App](https://developers.qredo.com/signing-agent/v2-signing-agent/get-started/). <br/>
-    license:
-        name: APACHE 2.0
-        url: https://www.apache.org/licenses/LICENSE-2.0
-    title: Qredo Signing Agent V2
-    version: 1.0.0
-paths:
-    /client:
-        get:
-            description: This endpoint retrieves the `agentID` and `feedURL` if an agent is registered.
-            operationId: GetClient
-            produces:
-                - application/json
-            responses:
-                "200":
-                    description: GetClientResponse
-                    schema:
-                        $ref: '#/definitions/GetClientResponse'
-            summary: Get information about the registered agent
-            tags:
-                - client
-    /client/action/{action_id}:
-        delete:
-            description: This endpoint rejects a transaction based on the transaction ID, `action_id`, passed.
-            operationId: actionReject
-            parameters:
-                - description: The ID of the transaction that is received from the feed.
-                  in: path
-                  name: action_id
-                  required: true
-                  type: string
-            produces:
-                - application/json
-            responses:
-                "200":
-                    description: ActionResponse
-                    schema:
-                        $ref: '#/definitions/ActionResponse'
-                "400":
-                    description: Bad request
-                    schema:
-                        $ref: '#/definitions/ErrorResponse'
-                "404":
-                    description: Not found
-                    schema:
-                        $ref: '#/definitions/ErrorResponse'
-                "500":
-                    description: Internal error
-                    schema:
-                        $ref: '#/definitions/ErrorResponse'
-            summary: Reject a transaction
-            tags:
-                - action
-        put:
-            description: This endpoint approves a transaction based on the transaction ID, `action_id`, passed.
-            operationId: ActionApprove
-            parameters:
-                - description: The ID of the transaction that is received from the feed.
-                  in: path
-                  name: action_id
-                  required: true
-                  type: string
-            produces:
-                - application/json
-            responses:
-                "200":
-                    description: ActionResponse
-                    schema:
-                        $ref: '#/definitions/ActionResponse'
-                "400":
-                    description: Bad request
-                    schema:
-                        $ref: '#/definitions/ErrorResponse'
-                "404":
-                    description: Not found
-                    schema:
-                        $ref: '#/definitions/ErrorResponse'
-                "500":
-                    description: Internal error
-                    schema:
-                        $ref: '#/definitions/ErrorResponse'
-            summary: Approve a transaction
-            tags:
-                - action
-    /client/feed:
-        get:
-            description: This endpoint feeds approval requests coming from the Qredo Backend to the agent.
-            operationId: ClientFeed
-            produces:
-                - application/json
-            responses:
-                "200":
-                    description: ClientFeedResponse
-                    schema:
-                        $ref: '#/definitions/ClientFeedResponse'
-            schemes:
-                - ws
-                - wss
-            summary: Get approval requests Feed (via websocket) from Qredo Backend
-            tags:
-                - client
-    /healthcheck/config:
-        get:
-            description: This endpoint returns the application configuration.
-            operationId: HealthcheckConfig
-            produces:
-                - application/json
-            responses:
-                "200":
-                    description: ConfigResponse
-                    schema:
-                        $ref: '#/definitions/ConfigResponse'
-            summary: Check application configuration
-            tags:
-                - healthcheck
-    /healthcheck/status:
-        get:
-            description: This endpoint returns the application status.
-            operationId: HealthcheckStatus
-            produces:
-                - application/json
-            responses:
-                "200":
-                    description: StatusResponse
-                    schema:
-                        $ref: '#/definitions/StatusResponse'
-            summary: Check application status
-            tags:
-                - healthcheck
-    /healthcheck/version:
-        get:
-            description: This endpoint returns information about the application version.
-            operationId: HealthCheckVersion
-            produces:
-                - application/json
-            responses:
-                "200":
-                    description: VersionResponse
-                    schema:
-                        $ref: '#/definitions/VersionResponse'
-            summary: Check application version
-            tags:
-                - healthcheck
-    /register:
-        post:
-            consumes:
-                - application/json
-            description: This will register the agent only if there is none already registered.
-            operationId: RegisterAgent
-            parameters:
-                - in: body
-                  name: Body
-                  schema:
-                    $ref: '#/definitions/ClientRegisterRequest'
-            produces:
-                - application/json
-            responses:
-                "200":
-                    description: AgentRegisterResponse
-                    schema:
-                        $ref: '#/definitions/AgentRegisterResponse'
-                "400":
-                    description: Bad request
-                    schema:
-                        $ref: '#/definitions/ErrorResponse'
-                "404":
-                    description: Not found
-                    schema:
-                        $ref: '#/definitions/ErrorResponse'
-                "500":
-                    description: Internal error
-                    schema:
-                        $ref: '#/definitions/ErrorResponse'
-            summary: Register a new agent
-            tags:
-                - client
-schemes:
-    - http
-    - https
-swagger: "2.0"
+    ErrorResponseInternal:
+        properties:
+            Code:
+                description: The result code of the request.
+                example: 500
+                format: int64
+                type: integer
+            Detail:
+                description: The result message of the request.
+                example: failed to register agent
+                type: string
+        type: object
+    ErrorResponseNotFound:
+        properties:
+            Code:
+                description: The result code of the request.
+                example: 404
+                format: int64
+                type: integer
+            Detail:
+                description: The result message of the request.
+                example: agent not registered
+                type: string
+        type: object
