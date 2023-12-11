@@ -1,12 +1,11 @@
 base:
-  qredoAPI: https://sandbox-api.qredo.network/api/v1/p
-  pin: 0
+  qredoAPI: https://api-v2.qredo.network/api/v2
 autoApproval:
   enabled: true
   retryIntervalMaxSec: 300
   retryIntervalSec: 5
 websocket:
-  qredoWebsocket: wss://sandbox-api.qredo.network/api/v1/p/coreclient/feed
+  qredoWebsocket: wss://api-v2.qredo.network/api/v2/actions/signrequests
   reconnectTimeoutSec: 300
   reconnectIntervalSec: 5
   pingPeriodSec: 5
@@ -36,7 +35,7 @@ loadBalancing:
     password: ""
     db: 0
 store:
-  type: file # oci/aws/az/file
+  type: file # oci/aws/gcp
   file: /volume/ccstore.db
   oci:
     compartment: ocid1.tenancy.oc1...
@@ -46,5 +45,6 @@ store:
   aws:
     region: aws-region-...
     configSecret: secrets_manager_secret...
-  az: ""
-  # ...
+  gcp:
+    projectID: signing-agent-1234...
+    configSecret: secrets_manager_secret...
