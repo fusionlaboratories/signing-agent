@@ -11,7 +11,7 @@ info:
         url: https://www.qredo.com
     description: |-
         The Qredo Signing Agent service interacts with the Qredo API v2 to register a Signing Agent to automate approvals according to your custody policy. <br/>
-        To start using the Signing Agent, you need to set up an API key in the Qredo Web App, run the Signing Agent, and register it. To learn more, see the [Get Started guide](https://developers.qredo.com/developer-guides/signing-agent-v2/#step-1-get-an-api-key-and-secret). <br/>
+        To start using the Signing Agent, you need to set up an API key in the Qredo Web App, run the Signing Agent, and register it. To learn more, see the [Get Started guide](https://developers.qredo.com/developer-guides/signing-agent/get-started). <br/>
     license:
         name: APACHE 2.0
         url: https://www.apache.org/licenses/LICENSE-2.0
